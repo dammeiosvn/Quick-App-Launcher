@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="App Launcher">
+    <link rel="apple-touch-icon" href="iCon.png">
+    <title>Quick App Launcher</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-background"></div>
+
+    <div class="glass-container" id="app-grid">
+        <!-- Apps render here -->
+    </div>
+
+    <!-- Nút Cài đặt -->
+    <button id="btn-setting">
+        <img src="image/icon_setting.png" alt="Settings">
+    </button>
+
+    <!-- Thanh Xoá/Sửa ứng dụng (Hiện khi bật chế độ chỉnh sửa) -->
+    <div id="edit-bar" class="hidden glass-panel">
+        <button id="btn-exit-edit" class="btn-full" data-i18n="exit_edit">Thoát chế độ sửa</button>
+        <img src="image/delete.png" id="trash-icon" alt="Trash">
+    </div>
+
+    <!-- Modal Cài đặt -->
+    <div id="setting-modal" class="modal hidden">
+        <div class="modal-content glass-panel" id="setting-panel">
+            <div class="modal-header">
+                <h2 data-i18n="settings_title">Cài Đặt</h2>
+                <div>
+                    <button id="btn-edit-mode" class="btn-icon">✏️</button>
+                    <button id="btn-info" class="btn-icon"><div class="icon-info">i</div></button>
+                </div>
+                <button id="btn-close-setting" class="btn-close">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Nguồn Nền -->
+                <div class="setting-group stacked">
+                    <label data-i18n="bg_source">Đổi Ảnh Nền (Tệp/Thư viện)</label>
+                    <input type="file" id="input-bg-file" accept="image/*">
+                    <label data-i18n="bg_url">Hoặc nhập URL Ảnh</label>
+                    <input type="text" id="input-bg-image" placeholder="https://...">
+                </div>
+
+                <!-- Nhóm Khung -->
+                <details class="setting-category">
+                    <summary data-i18n="cat_container">Nhóm Khung & Nền</summary>
+                    <div class="setting-group stacked">
+                        <label data-i18n="bg_color">Màu Nền Chính</label>
+                        <input type="color" id="color-bg" class="apple-color-picker">
+                    </div>
+                    <div class="setting-group stacked">
+                        <label data-i18n="container_color">Màu Khung Chứa</label>
+                        <input type="color" id="color-container" class="apple-color-picker">
+                    </div>
+                    <div class="setting-group stacked">
+                        <label data-i18n="bg_opacity">Độ Đậm Nhạt (Opacity Khung)</label>
+                        <input type="range" id="slider-opacity" min="0" max="100" value="30">
+                    </div>
+                    <div class="setting-group stacked">
+                        <label data-i18n="radius_container">Bo Góc Khung (px)</label>
+                        <input type="range" id="slider-radius-container" min="0" max="100" value="35">
+                    </div>
+                </details>
+
+                <!-- Nhóm Icon -->
+                <details class="setting-category">
+                    <summary data-i18n="cat_icon">Nhóm Icon & Chữ</summary>
+                    <div class="setting-group stacked">
+                        <label data-i18n="icon_size">Kích Thước Icon (px)</label>
+                        <input type="range" id="slider-icon-size" min="40" max="90" value="60">
+                    </div>
+                    <div class="setting-group stacked">
+                        <label data-i18n="radius_icon">Bo Góc Icon (px)</label>
+                        <input type="range" id="slider-radius-icon" min="0" max="45" value="14">
+                    </div>
+                    <div class="setting-group stacked">
+                        <label data-i18n="toggle_name">Hiển Thị Tên Ứng Dụng</label>
+                        <input type="checkbox" id="check-show-name" checked>
+                    </div>
+                    <div class="setting-group stacked">
+                        <label data-i18n="text_size">Kích Thước Chữ (px)</label>
+                        <input type="range" id="slider-text-size" min="8" max="18" value="11">
+                    </div>
+                    <div class="setting-group stacked">
+                        <label data-i18n="text_spacing">Co Giãn Chữ (Spacing)</label>
+                        <input type="range" id="slider-text-spacing" min="0" max="5" step="0.5" value="0">
+                    </div>
+                    <div class="setting-group stacked">
+                        <label data-i18n="text_color">Màu Chữ</label>
+                        <input type="color" id="color-text" class="apple-color-picker">
+                    </div>
+                </details>
+
+                <!-- Nhóm Bóng -->
+                <details class="setting-category">
+                    <summary data-i18n="cat_shadow">Nhóm Đổ Bóng</summary>
+                    <div class="setting-group">
+                        <label data-i18n="shadow_type">Kiểu Bóng</label>
+                        <select id="select-shadow-type"></select>
+                    </div>
+                    <div class="setting-group stacked"><label>Trục X</label><input type="range" id="slider-shadow-x" min="-20" max="20" value="0"></div>
+                    <div class="setting-group stacked"><label>Trục Y</label><input type="range" id="slider-shadow-y" min="-20" max="20" value="10"></div>
+                    <div class="setting-group stacked"><label>Blur</label><input type="range" id="slider-shadow-b" min="0" max="50" value="20"></div>
+                    <div class="setting-group stacked"><label>Spread</label><input type="range" id="slider-shadow-s" min="-20" max="20" value="0"></div>
+                    <div class="setting-group stacked"><label data-i18n="shadow_color">Màu Bóng</label><input type="color" id="color-shadow" class="apple-color-picker"></div>
+                </details>
+                
+                <div class="version-text">V 1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kho Ứng Dụng (App Store) -->
+    <div id="store-modal" class="modal hidden">
+        <div class="modal-content glass-panel" style="height: 90vh;">
+            <div class="modal-header">
+                <h2 data-i18n="store_title">Kho Ứng Dụng</h2>
+                <button id="btn-close-store" class="btn-close">&times;</button>
+            </div>
+            <div class="store-search-bar">
+                <input type="text" id="input-search-app" placeholder="Tìm kiếm ứng dụng...">
+                <select id="select-store-region">
+                    <option value="VN">VN</option><option value="US">US</option>
+                    <option value="JP">JP</option><option value="KR">KR</option>
+                    <option value="CN">CN</option><option value="GB">GB</option>
+                    <option value="CA">CA</option><option value="AU">AU</option>
+                    <option value="FR">FR</option><option value="DE">DE</option>
+                </select>
+                <button id="btn-search-app" class="btn-icon">🔍</button>
+            </div>
+            <div id="store-results" class="list-menu"></div>
+        </div>
+    </div>
+
+    <!-- Modal Đổi Tên App -->
+    <div id="rename-modal" class="modal hidden">
+        <div class="modal-content popup-panel">
+            <h3 data-i18n="rename_title">Đổi Tên Ứng Dụng</h3>
+            <input type="text" id="input-rename" class="full-input">
+            <button id="btn-save-rename" class="btn-full" data-i18n="save">Lưu</button>
+            <button id="btn-close-rename" class="btn-full alt" data-i18n="close">Huỷ</button>
+        </div>
+    </div>
+
+    <!-- Modal Info -->
+    <div id="info-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <div class="modal-header"><h2 data-i18n="info_title">Thông Tin</h2><button id="btn-close-info" class="btn-close">&times;</button></div>
+            <div class="modal-body list-menu">
+                <a href="https://browse.shortcuty.app/user/Sentechtipsvn" target="_blank" class="menu-item" data-i18n="follow">Theo dõi</a>
+                <a href="mailto:sentechtips@gmail.com" class="menu-item" data-i18n="contact">Liên hệ</a>
+                <button id="btn-about" class="menu-item" data-i18n="about">Giới thiệu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup About -->
+    <div id="about-popup" class="modal hidden">
+        <div class="modal-content popup-panel">
+            <h3>Quick App Launcher</h3><p><strong>Version:</strong> 1.0</p><p><strong>Author:</strong> Sếp Sen</p>
+            <p data-i18n="about_desc">Webclip khởi chạy ứng dụng siêu tốc qua Phím tắt iOS...</p>
+            <button id="btn-close-about" class="btn-full" data-i18n="close">Đóng</button>
+        </div>
+    </div>
+
+    <script src="vi-VN.json" type="application/json" id="i18n-vi"></script>
+    <script src="theme.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
