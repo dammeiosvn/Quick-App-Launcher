@@ -44,11 +44,15 @@ async function loadAppsData() {
     // 2. Tải danh sách App sếp đã thêm vào màn hình chính
     const local = localStorage.getItem('qal_apps');
     if (local) {
-        appList = JSON.parse(local); // Nếu đã từng thêm app thì load lại
+        appList = JSON.parse(local); 
     } else {
         appList = []; // Lần chạy đầu tiên: mảng rỗng (Chỉ hiện dấu +)
     }
     renderApps();
+}
+
+function saveApps() {
+    localStorage.setItem('qal_apps', JSON.stringify(appList));
 }
 
 // --- RENDER GIAO DIỆN KHUNG APP & NÚT THÊM (+) ---
@@ -61,7 +65,7 @@ function renderApps() {
         btn.className = 'app-item';
         
         const icon = document.createElement('img');
-        // Logic đọc icon offline/online
+        // Logic đọc icon offline/online chuẩn xác
         if (app.icon.startsWith('http')) {
             icon.src = app.icon;
         } else {
@@ -69,7 +73,7 @@ function renderApps() {
             icon.src = `icon/${fileName}`;
         }
         
-        // Fallback icon
+        // Fallback icon nếu file lỗi hoặc gọi sai tên
         icon.onerror = function() { 
             this.onerror = () => { this.src = 'image/placeholder.png'; }; 
             this.src = `icon/${app.name}.png`; 
@@ -84,13 +88,14 @@ function renderApps() {
         grid.appendChild(btn);
     });
 
-    // Render nút Thêm (+) nếu chưa đủ 24 app
+    // Render nút Thêm (+) thông minh: Hễ dưới 24 app là hiện, kể cả đang ở chế độ xoá
     if (appList.length < 24) {
         const addBtn = document.createElement('button');
         addBtn.className = 'app-item add-app-btn';
         
         const addIconBox = document.createElement('div');
         addIconBox.className = 'add-icon-box';
+        // Icon + màu xanh dương chuẩn Apple
         addIconBox.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
         
         const addTitle = document.createElement('span');
@@ -99,12 +104,12 @@ function renderApps() {
         addBtn.appendChild(addIconBox);
         addBtn.appendChild(addTitle);
         
-        addBtn.onclick = () => {
-            if(!isEditMode) openStore();
-        };
+        // Sếp có thể bấm thêm app bất cứ lúc nào
+        addBtn.onclick = () => openStore();
         grid.appendChild(addBtn);
     }
     
+    // Kích hoạt class CSS để rung icon nếu đang bật chế độ sửa
     grid.classList.toggle('edit-mode', isEditMode);
 }
 
@@ -118,7 +123,8 @@ function handleAppClick(app) {
         // Chế độ Edit: Hỏi Xoá hay Đổi Tên
         if(confirm(`Bạn muốn xoá ${app.name}?\nNhấn OK để Xoá, Cancel để Đổi Tên.`)) {
             appList = appList.filter(a => a.id !== app.id);
-            localStorage.setItem('qal_apps', JSON.stringify(appList));
+            saveApps();
+            // Lập tức gọi lại render để chèn nút + vào đúng vị trí trống
             renderApps();
         } else {
             currentEditId = app.id;
@@ -128,7 +134,7 @@ function handleAppClick(app) {
     }
 }
 
-// --- CHẾ ĐỘ SỬA TRANG (RUNG ICON & HIỆN NÚT XONG) ---
+// --- BẬT / TẮT CHẾ ĐỘ SỬA TRANG ---
 document.getElementById('btn-enter-edit-mode').onclick = () => {
     isEditMode = true; 
     toggleModal('setting-modal', false);
@@ -149,7 +155,7 @@ document.getElementById('btn-save-rename').onclick = () => {
     const newName = document.getElementById('input-rename').value;
     if (currentEditId && newName) {
         appList = appList.map(a => a.id === currentEditId ? {...a, name: newName} : a);
-        localStorage.setItem('qal_apps', JSON.stringify(appList));
+        saveApps();
         renderApps();
     }
     toggleModal('rename-modal', false);
@@ -188,11 +194,12 @@ function addAppToGrid(app) {
     if (appList.find(a => a.id === app.id)) return alert("App đã tồn tại!");
     
     appList.push(app);
-    localStorage.setItem('qal_apps', JSON.stringify(appList));
+    saveApps();
     renderApps();
     toggleModal('store-modal', false);
 }
 
+// Tìm kiếm Online API iTunes
 document.getElementById('btn-search-app').onclick = async () => {
     const query = document.getElementById('input-search-app').value.trim();
     const region = document.getElementById('select-store-region').value;
@@ -205,7 +212,7 @@ document.getElementById('btn-search-app').onclick = async () => {
     
     const resultsContainer = document.getElementById('store-results');
     document.getElementById('store-status-text').textContent = "Kết quả từ iTunes API (Online):";
-    resultsContainer.innerHTML = '<p>Đang tìm kiếm...</p>';
+    resultsContainer.innerHTML = '<p style="padding: 10px;">Đang tìm kiếm...</p>';
     
     try {
         const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&country=${region}&entity=software&limit=15`);
@@ -213,7 +220,7 @@ document.getElementById('btn-search-app').onclick = async () => {
         resultsContainer.innerHTML = '';
         
         if(data.results.length === 0) {
-            resultsContainer.innerHTML = '<p>Không tìm thấy ứng dụng nào.</p>';
+            resultsContainer.innerHTML = '<p style="padding: 10px;">Không tìm thấy ứng dụng nào.</p>';
             return;
         }
 
@@ -225,7 +232,7 @@ document.getElementById('btn-search-app').onclick = async () => {
             resultsContainer.appendChild(div);
         });
     } catch (e) { 
-        resultsContainer.innerHTML = '<p>Lỗi kết nối API iTunes.</p>'; 
+        resultsContainer.innerHTML = '<p style="padding: 10px;">Lỗi kết nối API iTunes.</p>'; 
     }
 };
 
@@ -236,12 +243,21 @@ function toggleModal(id, show) {
     else modal.classList.add('hidden');
 }
 
+// Bắt sự kiện tắt bật Modal
 document.getElementById('btn-setting').onclick = () => toggleModal('setting-modal', true);
 document.getElementById('btn-close-setting').onclick = () => toggleModal('setting-modal', false);
 document.getElementById('btn-close-store').onclick = () => toggleModal('store-modal', false);
-document.getElementById('btn-info').onclick = () => { toggleModal('setting-modal', false); toggleModal('info-modal', true); };
+
+document.getElementById('btn-info').onclick = () => { 
+    toggleModal('setting-modal', false); 
+    toggleModal('info-modal', true); 
+};
 document.getElementById('btn-close-info').onclick = () => toggleModal('info-modal', false);
-document.getElementById('btn-about').onclick = () => { toggleModal('info-modal', false); toggleModal('about-popup', true); };
+
+document.getElementById('btn-about').onclick = () => { 
+    toggleModal('info-modal', false); 
+    toggleModal('about-popup', true); 
+};
 document.getElementById('btn-close-about').onclick = () => toggleModal('about-popup', false);
 
 // Init khi tải xong trang
