@@ -175,7 +175,7 @@ async function loadSettings() {
     const bgVal = saved.bgInputVal || '';
     document.getElementById('input-bg-image').value = bgVal;
     
-    // Khôi phục ảnh nền
+    // Khôi phục ảnh nền (Sửa lỗi logic)
     if (bgVal === "[Ảnh từ thiết bị]" && localBase64Image) {
         root.style.setProperty('--bg-image', `url('${localBase64Image}')`);
     } else if (bgVal && bgVal !== "[Ảnh từ thiết bị]") {
