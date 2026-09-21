@@ -11,10 +11,12 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Nền tổng thể -->
     <div id="app-background"></div>
 
+    <!-- Khung chứa App chính -->
     <div class="glass-container" id="app-grid">
-        <!-- Apps render here -->
+        <!-- Icon sẽ được render từ main.js vào đây -->
     </div>
 
     <!-- Nút Cài đặt -->
@@ -22,7 +24,7 @@
         <img src="image/icon_setting.png" alt="Settings">
     </button>
 
-    <!-- Thanh Xoá/Sửa ứng dụng (Hiện khi bật chế độ chỉnh sửa) -->
+    <!-- Thanh Xoá/Sửa ứng dụng (ẩn mặc định) -->
     <div id="edit-bar" class="hidden glass-panel">
         <button id="btn-exit-edit" class="btn-full" data-i18n="exit_edit">Thoát chế độ sửa</button>
         <img src="image/delete.png" id="trash-icon" alt="Trash">
@@ -165,13 +167,14 @@
     <!-- Popup About -->
     <div id="about-popup" class="modal hidden">
         <div class="modal-content popup-panel">
-            <h3>Quick App Launcher</h3><p><strong>Version:</strong> 1.0</p><p><strong>Author:</strong> Sếp Sen</p>
-            <p data-i18n="about_desc">Webclip khởi chạy ứng dụng siêu tốc qua Phím tắt iOS...</p>
+            <h3>Quick App Launcher</h3>
+            <p><strong>Version:</strong> 1.0</p>
+            <p><strong>Author:</strong> Sếp Sen</p>
+            <p data-i18n="about_desc">Webclip khởi chạy ứng dụng siêu tốc qua Phím tắt iOS. Hỗ trợ đa ngôn ngữ, tự động sáng tối, tuỳ chỉnh giao diện linh hoạt.</p>
             <button id="btn-close-about" class="btn-full" data-i18n="close">Đóng</button>
         </div>
     </div>
 
-    <script src="vi-VN.json" type="application/json" id="i18n-vi"></script>
     <script src="theme.js"></script>
     <script src="main.js"></script>
 </body>
