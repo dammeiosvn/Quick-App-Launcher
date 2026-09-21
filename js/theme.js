@@ -89,6 +89,16 @@ function generateCurrentShadowString() {
     return template.replace(/{x}/g, x).replace(/{y}/g, y).replace(/{b}/g, b).replace(/{s}/g, s).replace(/{c}/g, c);
 }
 
+// Hàm áp dụng ảnh nền trực tiếp vào DOM (Khắc phục lỗi WebClip không nhận biến CSS)
+function applyBackground(url) {
+    const bgEl = document.getElementById('app-background');
+    if (url && url !== 'none') {
+        bgEl.style.backgroundImage = `url('${url}')`;
+    } else {
+        bgEl.style.backgroundImage = 'none';
+    }
+}
+
 function updateTheme() {
     // Cập nhật màu nền và khung
     root.style.setProperty('--bg-color', document.getElementById('color-bg').value);
@@ -175,13 +185,13 @@ async function loadSettings() {
     const bgVal = saved.bgInputVal || '';
     document.getElementById('input-bg-image').value = bgVal;
     
-    // Khôi phục ảnh nền (Sửa lỗi logic)
+    // Khôi phục ảnh nền (Sử dụng hàm applyBackground mới)
     if (bgVal === "[Ảnh từ thiết bị]" && localBase64Image) {
-        root.style.setProperty('--bg-image', `url('${localBase64Image}')`);
+        applyBackground(localBase64Image);
     } else if (bgVal && bgVal !== "[Ảnh từ thiết bị]") {
-        root.style.setProperty('--bg-image', `url('${bgVal}')`);
+        applyBackground(bgVal);
     } else {
-        root.style.setProperty('--bg-image', 'none');
+        applyBackground('none');
     }
 
     document.getElementById('color-bg').value = saved.bgColor || (isLight ? '#f2f2f7' : '#000000');
@@ -231,16 +241,16 @@ document.getElementById('btn-apply-bg').addEventListener('click', async () => {
     }
 
     if (finalBgUrl) {
-        root.style.setProperty('--bg-image', `url('${finalBgUrl}')`);
+        applyBackground(finalBgUrl);
     } else {
-        root.style.setProperty('--bg-image', 'none');
+        applyBackground('none');
     }
     
     saveSettings();
     alert("Đã áp dụng ảnh nền thành công!");
 });
 
-// 2. Chọn Ảnh Từ Thiết Bị
+// 2. Chọn Ảnh Từ Thiết Bị (Tự động áp dụng luôn)
 document.getElementById('input-bg-file').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -269,7 +279,7 @@ document.getElementById('input-bg-file').addEventListener('change', function(e) 
             await saveImageToDB(localBase64Image);
             
             // Tự động áp dụng luôn
-            root.style.setProperty('--bg-image', `url('${localBase64Image}')`);
+            applyBackground(localBase64Image);
             saveSettings();
         };
         img.src = event.target.result;
