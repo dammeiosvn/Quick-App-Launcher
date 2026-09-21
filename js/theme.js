@@ -22,6 +22,7 @@ const root = document.documentElement;
 const isLight = window.matchMedia('(prefers-color-scheme: light)').matches;
 
 let localBase64Image = "";
+let appliedShadows = []; // Mảng chứa các lớp bóng đa tầng đã được sếp chốt
 
 // ==========================================
 // HỆ THỐNG INDEXED-DB LƯU ẢNH NỀN
@@ -73,21 +74,23 @@ function hexToRgb(hex) {
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
 }
 
+// Hàm sinh mã CSS bóng dựa trên thanh trượt hiện tại (Preview)
+function generateCurrentShadowString() {
+    const shadowType = document.getElementById('select-shadow-type').value;
+    const x = document.getElementById('slider-shadow-x').value;
+    const y = document.getElementById('slider-shadow-y').value;
+    const b = document.getElementById('slider-shadow-b').value;
+    const s = document.getElementById('slider-shadow-s').value;
+    const c = document.getElementById('color-shadow').value;
+
+    const template = shadowTemplates.find(t => t.id === shadowType)?.template;
+    if (!template) return "";
+
+    return template.replace(/{x}/g, x).replace(/{y}/g, y).replace(/{b}/g, b).replace(/{s}/g, s).replace(/{c}/g, c);
+}
+
+// Cập nhật giao diện (Trừ Ảnh nền, ảnh nền chỉ cập nhật khi bấm nút Áp Dụng)
 function updateTheme() {
-    const bgInput = document.getElementById('input-bg-image').value;
-    let finalBgUrl = bgInput;
-
-    if (bgInput === "[Ảnh từ thiết bị]") {
-        finalBgUrl = localBase64Image;
-    } else {
-        if (localBase64Image !== "") {
-            localBase64Image = "";
-            saveImageToDB("");
-        }
-    }
-
-    root.style.setProperty('--bg-image', finalBgUrl ? `url(${finalBgUrl})` : 'none');
-    
     root.style.setProperty('--bg-color', document.getElementById('color-bg').value);
     root.style.setProperty('--container-color', hexToRgb(document.getElementById('color-container').value));
     root.style.setProperty('--container-opacity', document.getElementById('slider-opacity').value / 100);
@@ -101,14 +104,13 @@ function updateTheme() {
     root.style.setProperty('--text-spacing', document.getElementById('slider-text-spacing').value + 'px');
     root.style.setProperty('--text-color', document.getElementById('color-text').value);
 
-    const shadowStr = shadowTemplates.find(t => t.id === document.getElementById('select-shadow-type').value)?.template
-        .replace(/{x}/g, document.getElementById('slider-shadow-x').value)
-        .replace(/{y}/g, document.getElementById('slider-shadow-y').value)
-        .replace(/{b}/g, document.getElementById('slider-shadow-b').value)
-        .replace(/{s}/g, document.getElementById('slider-shadow-s').value)
-        .replace(/{c}/g, document.getElementById('color-shadow').value);
+    // Xử lý Đổ bóng đa lớp: Ghép các bóng đã lưu + bóng đang xem trước
+    const previewShadow = generateCurrentShadowString();
+    const finalShadows = appliedShadows.length > 0 ? [...appliedShadows, previewShadow] : [previewShadow];
     
-    if (shadowStr) root.style.setProperty('--shadow-value', shadowStr);
+    if (finalShadows.length > 0) {
+        root.style.setProperty('--shadow-value', finalShadows.join(', '));
+    }
     
     saveSettings();
 }
@@ -126,6 +128,11 @@ function saveSettings() {
         textSpacing: document.getElementById('slider-text-spacing').value,
         textColor: document.getElementById('color-text').value,
         showName: document.getElementById('check-show-name').checked,
+        
+        // Lưu trữ lại mảng bóng đa tầng
+        appliedShadows: appliedShadows,
+        
+        // Lưu slider tạm thời để khi mở lại vẫn thấy
         shadowType: document.getElementById('select-shadow-type').value,
         shadowX: document.getElementById('slider-shadow-x').value,
         shadowY: document.getElementById('slider-shadow-y').value,
@@ -145,13 +152,23 @@ async function loadSettings() {
     });
 
     const saved = JSON.parse(localStorage.getItem('qal_theme')) || {};
-    document.getElementById('input-bg-image').value = saved.bgInputVal || '';
     
+    // Nạp IndexedDB
     try {
         const savedImage = await loadImageFromDB();
         if (savedImage) localBase64Image = savedImage;
     } catch(e) { console.error("Lỗi lấy ảnh từ IndexedDB", e); }
     
+    document.getElementById('input-bg-image').value = saved.bgInputVal || '';
+    
+    // Phục hồi Nền ngay khi vừa load trang
+    if (saved.bgInputVal === "[Ảnh từ thiết bị]" && localBase64Image) {
+        root.style.setProperty('--bg-image', `url(${localBase64Image})`);
+    } else if (saved.bgInputVal && saved.bgInputVal !== "[Ảnh từ thiết bị]") {
+        root.style.setProperty('--bg-image', `url(${saved.bgInputVal})`);
+    }
+
+    // Phục hồi cài đặt khác
     document.getElementById('color-bg').value = saved.bgColor || (isLight ? '#f2f2f7' : '#000000');
     document.getElementById('color-container').value = saved.containerColor || (isLight ? '#ffffff' : '#ffffff');
     document.getElementById('slider-opacity').value = saved.containerOpacity || (isLight ? 60 : 15);
@@ -165,6 +182,8 @@ async function loadSettings() {
     document.getElementById('slider-text-spacing').value = saved.textSpacing || 0;
     document.getElementById('color-text').value = saved.textColor || (isLight ? '#000000' : '#ffffff');
 
+    // Phục hồi Đổ bóng đa lớp
+    appliedShadows = saved.appliedShadows || [];
     document.getElementById('select-shadow-type').value = saved.shadowType || 'outer';
     document.getElementById('slider-shadow-x').value = saved.shadowX || 0;
     document.getElementById('slider-shadow-y').value = saved.shadowY || 10;
@@ -175,7 +194,30 @@ async function loadSettings() {
     updateTheme();
 }
 
-// Bắt sự kiện chọn ảnh từ thiết bị (Có tích hợp Canvas Nén ảnh chống tràn bộ nhớ iOS)
+// ==========================================
+// XỬ LÝ CÁC NÚT BẤM (ÁP DỤNG)
+// ==========================================
+
+// 1. Nút Áp Dụng Nền
+document.getElementById('btn-apply-bg').addEventListener('click', async () => {
+    const bgInput = document.getElementById('input-bg-image').value;
+    let finalBgUrl = bgInput;
+
+    if (bgInput === "[Ảnh từ thiết bị]") {
+        finalBgUrl = localBase64Image;
+    } else {
+        if (localBase64Image !== "") {
+            localBase64Image = "";
+            await saveImageToDB(""); // Xoá sạch DB cho nhẹ máy nếu dùng URL ngoài
+        }
+    }
+
+    root.style.setProperty('--bg-image', finalBgUrl ? `url(${finalBgUrl})` : 'none');
+    saveSettings();
+    alert("Đã áp dụng ảnh nền thành công!");
+});
+
+// 2. Chọn Ảnh Từ Thiết Bị (Giờ chỉ lưu tạm, đợi sếp bấm nút Áp Dụng)
 document.getElementById('input-bg-file').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -200,18 +242,34 @@ document.getElementById('input-bg-file').addEventListener('change', function(e) 
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
             localBase64Image = canvas.toDataURL('image/jpeg', 0.85);
-            
             document.getElementById('input-bg-image').value = "[Ảnh từ thiết bị]"; 
             await saveImageToDB(localBase64Image);
-            updateTheme();
+            // KHÔNG GỌI updateTheme() Ở ĐÂY ĐỂ TRÁNH RENDER LÚC CHƯA XÁC NHẬN
         };
         img.src = event.target.result;
     };
     reader.readAsDataURL(file);
 });
 
-// Xử lý sự kiện bấm nút đỏ macOS để đóng bảng cài đặt
-document.getElementById('mac-close').onclick = () => {
+// 3. Nút Áp Dụng Bóng (Cho phép xếp chồng nhiều lớp bóng)
+document.getElementById('btn-apply-shadow').addEventListener('click', () => {
+    const newShadow = generateCurrentShadowString();
+    if (newShadow) {
+        appliedShadows.push(newShadow); // Đưa lớp bóng hiện tại vào mảng chốt
+        saveSettings();
+        alert(`Đã xếp chồng ${appliedShadows.length} lớp bóng! Bạn có thể chỉnh sửa tiếp lớp bóng mới.`);
+    }
+});
+
+// 4. Nút Làm Mới Bóng (Xoá toàn bộ mảng)
+document.getElementById('btn-reset-shadow').addEventListener('click', () => {
+    appliedShadows = []; 
+    updateTheme(); // Render lại preview đơn thuần
+    alert("Đã làm mới toàn bộ cài đặt Đổ bóng!");
+});
+
+// Xử lý sự kiện bấm nút đỏ macOS để đóng bảng Cài đặt
+document.getElementById('mac-close-setting').onclick = () => {
     document.getElementById('setting-modal').classList.add('hidden');
 };
 
@@ -225,6 +283,12 @@ document.querySelectorAll('input[type="range"]').forEach(el => {
     el.addEventListener('mouseup', () => settingPanel.classList.remove('transparent'));
 });
 
-document.querySelectorAll('.modal-body input:not([type="range"]):not([type="file"]), .modal-body select').forEach(el => el.addEventListener('change', updateTheme));
+// Lắng nghe thay đổi của các ô chọn khác
+document.querySelectorAll('.modal-body input:not([type="range"]):not([type="file"]), .modal-body select').forEach(el => {
+    // Riêng ô nhập URL thì không cho tự động chạy khi chưa bấm nút "Áp dụng nền"
+    if(el.id !== 'input-bg-image') {
+        el.addEventListener('change', updateTheme);
+    }
+});
 
 document.addEventListener('DOMContentLoaded', loadSettings);
