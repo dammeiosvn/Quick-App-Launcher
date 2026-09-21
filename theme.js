@@ -21,11 +21,13 @@ const shadowTemplates = [
 const root = document.documentElement;
 const isLight = window.matchMedia('(prefers-color-scheme: light)').matches;
 
+// Hàm chuyển mã Hex sang RGB để tích hợp mờ khung nền
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
 }
 
+// Hàm đẩy cấu hình lên CSS gốc
 function updateTheme() {
     const bgUrl = document.getElementById('input-bg-image').value;
     root.style.setProperty('--bg-image', bgUrl ? `url(${bgUrl})` : 'none');
@@ -53,6 +55,7 @@ function updateTheme() {
     saveSettings();
 }
 
+// Lưu dữ liệu setting vào LocalStorage
 function saveSettings() {
     const config = {
         bgUrl: document.getElementById('input-bg-image').value,
@@ -76,8 +79,10 @@ function saveSettings() {
     localStorage.setItem('qal_theme', JSON.stringify(config));
 }
 
+// Tải cài đặt lúc khởi động web
 function loadSettings() {
     const shadowSelect = document.getElementById('select-shadow-type');
+    shadowSelect.innerHTML = ''; // Làm sạch select
     shadowTemplates.forEach(t => {
         let opt = document.createElement('option'); opt.value = t.id; opt.textContent = t.name;
         opt.dataset.i18n = t.nameKey; shadowSelect.appendChild(opt);
@@ -107,7 +112,7 @@ function loadSettings() {
     updateTheme();
 }
 
-// Xử lý upload ảnh Local
+// Bắt sự kiện người dùng thêm ảnh vào thư viện bằng Tệp
 document.getElementById('input-bg-file').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
@@ -120,7 +125,7 @@ document.getElementById('input-bg-file').addEventListener('change', function(e) 
     }
 });
 
-// Xử lý làm mờ Modal Setting khi kéo Slider
+// Chức năng làm mờ khung setting xuống còn 0.1 khi kéo Slider để nhìn rõ đằng sau
 const settingPanel = document.getElementById('setting-panel');
 document.querySelectorAll('input[type="range"]').forEach(el => {
     el.addEventListener('input', updateTheme);
@@ -129,6 +134,7 @@ document.querySelectorAll('input[type="range"]').forEach(el => {
     el.addEventListener('mousedown', () => settingPanel.classList.add('transparent'));
     el.addEventListener('mouseup', () => settingPanel.classList.remove('transparent'));
 });
+
 document.querySelectorAll('.modal-body input:not([type="range"]), .modal-body select').forEach(el => el.addEventListener('change', updateTheme));
 
 document.addEventListener('DOMContentLoaded', loadSettings);
