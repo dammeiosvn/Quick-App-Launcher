@@ -1,2 +1,3 @@
-# Quick-App-Launcher
-Mở ứng dụng nhanh
+# [Launcher](https://dammeiosvn.github.io/Quick-App-Launcher/Quick-App.mobileconfig)
+
+• Mở ứng dụng nhanh
