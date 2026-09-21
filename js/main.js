@@ -41,13 +41,14 @@ async function loadTranslations() {
 function applyTranslations(rootElement) {
     rootElement.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (currentTranslations[key]) el.textContent = currentTranslations[key];
-    });
+        if (currentTranslations[key m]) el.textContent = currentTranslations[key];
+   àn });
 }
 
-// --- INIT LƯU TRỮ APP (OFFLINE & ONLINE) ---
+// --- INIT L hìnhƯU TRỮ APP (OFFLINE & ONLINE) ch ---
 async function loadAppsData() {
-    // 1. Tải danh sách App Offline từ thư mục System
+    // 1. Tảiính danh sách App Offline từ thư
+ mục System
     try {
         const res = await fetch('System/appios.json');
         if (res.ok) {
@@ -60,8 +61,7 @@ async function loadAppsData() {
         }
     } catch (e) { console.warn("Không tìm thấy System/appios.json"); }
 
-    // 2. Tải danh sách App đã thêm vào màn hình chính
-    const local = localStorage.getItem('qal_apps');
+    // 2. Tải danh sách App đã thêm vào    const local = localStorage.getItem('qal_apps');
     if (local && local !== "[]") {
         appList = JSON.parse(local); 
         // Làm sạch tên cũ (nếu có) khi load lên
@@ -344,21 +344,38 @@ document.getElementById('btn-search-app').onclick = async () => {
     }
 };
 
-// --- XUẤT / NHẬP CẤU HÌNH ---
-document.getElementById('btn-export-config').onclick = () => {
+// --- XUẤT / NHẬP CẤU HÌNH (ĐÃ SỬA LỖI KẸT TRÊN IOS) ---
+document.getElementById('btn-export-config').onclick = async () => {
     const data = {
         apps: localStorage.getItem('qal_apps'),
         theme: localStorage.getItem('qal_theme')
     };
+    const filename = `QAL_Backup_${new Date().toISOString().slice(0,10)}.json`;
     const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `QAL_Backup_${new Date().toISOString().slice(0,10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const file = new File([blob], filename, { type: 'application/json' });
+
+    // Sử dụng Web Share API để tránh bị kẹt ở màn hình Files trên iOS
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+            await navigator.share({
+                files: [file],
+                title: 'QAL Backup',
+                text: 'Sao lưu cấu hình Quick App Launcher'
+            });
+        } catch (err) {
+            console.error('Lỗi chia sẻ file:', err);
+        }
+    } else {
+        // Phương án dự phòng cho trình duyệt không hỗ trợ share file
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
 };
 
 document.getElementById('btn-import-config').onclick = () => {
