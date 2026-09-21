@@ -4,6 +4,23 @@ let isEditMode = false;
 let currentEditId = null;
 let currentTranslations = {};
 
+// Biến cho Long-press
+let pressTimer;
+let isLongPress = false;
+let contextApp = null;
+
+// --- HÀM LÀM SẠCH TÊN ỨNG DỤNG ---
+function cleanAppName(name) {
+    if (!name) return "Unknown";
+    // Tách tại các dấu gạch ngang, hai chấm, hoặc ngoặc đơn
+    let clean = name.split(/[-:()]/)[0].trim();
+    // Loại bỏ các ký tự đặc biệt ở cuối (nếu có)
+    clean = clean.replace(/[,\s]+$/, '');
+    // Nếu tên quá dài sau khi cắt, giới hạn độ dài
+    if (clean.length > 15) clean = clean.substring(0, 14) + '...';
+    return clean;
+}
+
 // --- ĐA NGÔN NGỮ (TỰ ĐỘNG PHÁT HIỆN & FALLBACK) ---
 async function loadTranslations() {
     const userLang = navigator.language || navigator.userLanguage;
@@ -36,15 +53,19 @@ async function loadAppsData() {
         if (res.ok) {
             const data = await res.json();
             offlineApps = Object.keys(data).map(key => ({
-                id: key, name: data[key].Name, icon: data[key].icon
+                id: key, 
+                name: cleanAppName(data[key].Name), 
+                icon: data[key].icon
             }));
         }
     } catch (e) { console.warn("Không tìm thấy System/appios.json"); }
 
-    // 2. Tải danh sách App sếp đã thêm vào màn hình chính
+    // 2. Tải danh sách App đã thêm vào màn hình chính
     const local = localStorage.getItem('qal_apps');
     if (local && local !== "[]") {
         appList = JSON.parse(local); 
+        // Làm sạch tên cũ (nếu có) khi load lên
+        appList = appList.map(app => ({...app, name: cleanAppName(app.name)}));
     } else {
         appList = []; 
     }
@@ -53,6 +74,53 @@ async function loadAppsData() {
 
 function saveApps() {
     localStorage.setItem('qal_apps', JSON.stringify(appList));
+}
+
+// --- XỬ LÝ LONG-PRESS ---
+function attachLongPress(element, app) {
+    const start = (e) => {
+        isLongPress = false;
+        contextApp = app;
+        pressTimer = setTimeout(() => {
+            isLongPress = true;
+            showContextMenu(e, app);
+        }, 600);
+    };
+    const cancel = () => {
+        clearTimeout(pressTimer);
+    };
+    
+    element.addEventListener('touchstart', start, {passive: true});
+    element.addEventListener('touchend', cancel);
+    element.addEventListener('touchmove', cancel);
+    element.addEventListener('mousedown', start);
+    element.addEventListener('mouseup', cancel);
+    element.addEventListener('mouseleave', cancel);
+}
+
+function showContextMenu(e, app) {
+    const menu = document.getElementById('context-menu');
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    // Điều chỉnh vị trí để không bị tràn ra ngoài màn hình
+    let menuX = x;
+    let menuY = y;
+    if (x > window.innerWidth - 180) menuX = window.innerWidth - 190;
+    if (y > window.innerHeight - 150) menuY = y - 150;
+    
+    menu.style.left = `${menuX}px`;
+    menu.style.top = `${menuY}px`;
+    menu.classList.remove('hidden');
+    
+    // Tự động ẩn menu khi bấm ra ngoài
+    setTimeout(() => {
+        document.addEventListener('click', hideContextMenu, {once: true});
+    }, 100);
+}
+
+function hideContextMenu() {
+    document.getElementById('context-menu').classList.add('hidden');
 }
 
 // --- RENDER GIAO DIỆN KHUNG APP & NÚT THÊM (+) ---
@@ -86,7 +154,18 @@ function renderApps() {
         
         btn.appendChild(icon);
         btn.appendChild(title);
-        btn.onclick = () => handleAppClick(app);
+        
+        // Gắn sự kiện click và long-press
+        btn.onclick = (e) => {
+            if (isLongPress) {
+                e.preventDefault();
+                isLongPress = false;
+                return;
+            }
+            handleAppClick(app);
+        };
+        attachLongPress(btn, app);
+        
         grid.appendChild(btn);
     });
 
@@ -117,23 +196,49 @@ function renderApps() {
     grid.classList.toggle('edit-mode', isEditMode);
 }
 
-// --- LOGIC CLICK APP (CHẠY / XOÁ / SỬA TÊN) ---
+// --- LOGIC CLICK APP (CHẠY) ---
 function handleAppClick(app) {
     if (!isEditMode) {
         const shortcutUrl = `shortcuts://run-shortcut?name=Open%20App%20Launcher&input=text&text=${encodeURIComponent(app.id)}`;
         window.location.href = shortcutUrl;
-    } else {
-        if(confirm(`Bạn muốn xoá ${app.name}?\nNhấn OK để Xoá, Cancel để Đổi Tên.`)) {
-            appList = appList.filter(a => a.id !== app.id);
-            saveApps();
-            renderApps();
-        } else {
-            currentEditId = app.id;
-            document.getElementById('input-rename').value = app.name;
-            toggleModal('rename-modal', true);
-        }
     }
 }
+
+// --- XỬ LÝ SỰ KIỆN CONTEXT MENU ---
+document.getElementById('ctx-rename').onclick = () => {
+    if (contextApp) {
+        currentEditId = contextApp.id;
+        document.getElementById('input-rename').value = contextApp.name;
+        toggleModal('rename-modal', true);
+    }
+    hideContextMenu();
+};
+
+document.getElementById('ctx-delete').onclick = () => {
+    if (contextApp) {
+        if (confirm(`Bạn có chắc muốn xoá ${contextApp.name}?`)) {
+            appList = appList.filter(a => a.id !== contextApp.id);
+            saveApps();
+            renderApps();
+        }
+    }
+    hideContextMenu();
+};
+
+document.getElementById('ctx-share').onclick = () => {
+    if (contextApp) {
+        if (navigator.share) {
+            navigator.share({
+                title: 'Quick App Launcher',
+                text: `Ứng dụng: ${contextApp.name}`,
+                url: window.location.href
+            }).catch(console.error);
+        } else {
+            alert(`Đã copy tên app: ${contextApp.name}`);
+        }
+    }
+    hideContextMenu();
+};
 
 // --- BẬT / TẮT CHẾ ĐỘ SỬA TRANG ---
 document.getElementById('btn-enter-edit-mode').onclick = () => {
@@ -153,9 +258,9 @@ document.getElementById('btn-done-edit').onclick = () => {
 
 // --- ĐỔI TÊN APP ---
 document.getElementById('btn-save-rename').onclick = () => {
-    const newName = document.getElementById('input-rename').value;
+    const newName = document.getElementById('input-rename').value.trim();
     if (currentEditId && newName) {
-        appList = appList.map(a => a.id === currentEditId ? {...a, name: newName} : a);
+        appList = appList.map(a => a.id === currentEditId ? {...a, name: cleanAppName(newName)} : a);
         saveApps();
         renderApps();
     }
@@ -194,7 +299,9 @@ function addAppToGrid(app) {
     if (appList.length >= 24) return alert("Đã đầy 24 ứng dụng!");
     if (appList.find(a => a.id === app.id)) return alert("App đã tồn tại!");
     
-    appList.push(app);
+    // Làm sạch tên trước khi thêm vào lưới
+    const cleanApp = { ...app, name: cleanAppName(app.name) };
+    appList.push(cleanApp);
     saveApps();
     renderApps();
     toggleModal('store-modal', false);
@@ -227,13 +334,55 @@ document.getElementById('btn-search-app').onclick = async () => {
         data.results.forEach(app => {
             const div = document.createElement('button');
             div.className = 'menu-item';
-            div.innerHTML = `<img src="${app.artworkUrl100}"> <span>${app.trackName}</span>`;
-            div.onclick = () => addAppToGrid({ id: app.bundleId, name: app.trackName, icon: app.artworkUrl100 });
+            const cleanName = cleanAppName(app.trackName);
+            div.innerHTML = `<img src="${app.artworkUrl100}"> <span>${cleanName}</span>`;
+            div.onclick = () => addAppToGrid({ id: app.bundleId, name: cleanName, icon: app.artworkUrl100 });
             resultsContainer.appendChild(div);
         });
     } catch (e) { 
         resultsContainer.innerHTML = '<p style="padding: 10px; text-align: center;">Lỗi kết nối API iTunes.</p>'; 
     }
+};
+
+// --- XUẤT / NHẬP CẤU HÌNH ---
+document.getElementById('btn-export-config').onclick = () => {
+    const data = {
+        apps: localStorage.getItem('qal_apps'),
+        theme: localStorage.getItem('qal_theme')
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `QAL_Backup_${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
+document.getElementById('btn-import-config').onclick = () => {
+    document.getElementById('input-import-config').click();
+};
+
+document.getElementById('input-import-config').onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const data = JSON.parse(event.target.result);
+            if (data.apps) localStorage.setItem('qal_apps', data.apps);
+            if (data.theme) localStorage.setItem('qal_theme', data.theme);
+            alert('Nhập cấu hình thành công! Trang sẽ tải lại để áp dụng.');
+            location.reload();
+        } catch (err) {
+            alert('File không hợp lệ hoặc bị lỗi!');
+        }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // Reset input
 };
 
 // --- ĐIỀU KHIỂN MODAL CHUNG ---
