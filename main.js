@@ -43,10 +43,10 @@ async function loadAppsData() {
 
     // 2. Tải danh sách App sếp đã thêm vào màn hình chính
     const local = localStorage.getItem('qal_apps');
-    if (local) {
+    if (local && local !== "[]") {
         appList = JSON.parse(local); 
     } else {
-        appList = []; // Lần chạy đầu tiên: mảng rỗng (Chỉ hiện dấu +)
+        appList = []; // Lần chạy đầu tiên: mảng rỗng (Chắc chắn sẽ hiện dấu +)
     }
     renderApps();
 }
@@ -58,8 +58,9 @@ function saveApps() {
 // --- RENDER GIAO DIỆN KHUNG APP & NÚT THÊM (+) ---
 function renderApps() {
     const grid = document.getElementById('app-grid');
-    grid.innerHTML = '';
+    grid.innerHTML = ''; // Làm sạch khung
     
+    // Render các app đã có
     appList.slice(0, 24).forEach(app => {
         const btn = document.createElement('button');
         btn.className = 'app-item';
@@ -88,7 +89,7 @@ function renderApps() {
         grid.appendChild(btn);
     });
 
-    // Render nút Thêm (+) thông minh: Hễ dưới 24 app là hiện, kể cả đang ở chế độ xoá
+    // Render nút Thêm (+) thông minh: Luôn hiện nếu dưới 24 app, kể cả khi 0 app
     if (appList.length < 24) {
         const addBtn = document.createElement('button');
         addBtn.className = 'app-item add-app-btn';
@@ -104,7 +105,7 @@ function renderApps() {
         addBtn.appendChild(addIconBox);
         addBtn.appendChild(addTitle);
         
-        // Sếp có thể bấm thêm app bất cứ lúc nào
+        // Bấm thêm app bất cứ lúc nào
         addBtn.onclick = () => openStore();
         grid.appendChild(addBtn);
     }
@@ -260,7 +261,8 @@ document.getElementById('btn-about').onclick = () => {
 };
 document.getElementById('btn-close-about').onclick = () => toggleModal('about-popup', false);
 
-// Init khi tải xong trang
-document.addEventListener('DOMContentLoaded', () => { 
-    Promise.all([loadTranslations(), loadAppsData()]);
+// Init khi tải xong trang (Gắn await để đảm bảo render ĐÚNG thứ tự)
+document.addEventListener('DOMContentLoaded', async () => { 
+    await loadTranslations();
+    await loadAppsData(); 
 });
