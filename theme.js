@@ -21,25 +21,70 @@ const shadowTemplates = [
 const root = document.documentElement;
 const isLight = window.matchMedia('(prefers-color-scheme: light)').matches;
 
-// Biến lưu trữ ảnh Base64 ẩn, tránh làm nặng giao diện Input
 let localBase64Image = "";
 
-// Hàm chuyển mã Hex sang RGB để tích hợp mờ khung nền
+// ==========================================
+// HỆ THỐNG INDEXED-DB LƯU ẢNH (CHỐNG LỖI CẮT CHUỖI)
+// ==========================================
+const DB_NAME = 'QAL_DB';
+const DB_VERSION = 1;
+const STORE_NAME = 'settings';
+
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+            }
+        };
+        request.onsuccess = (e) => resolve(e.target.result);
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
+async function saveImageToDB(base64Data) {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.put(base64Data, 'bgImage');
+        tx.oncomplete = () => resolve();
+        tx.onerror = (e) => reject(e.target.error);
+    });
+}
+
+async function loadImageFromDB() {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const request = tx.objectStore(STORE_NAME).get('bgImage');
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
+// ==========================================
+// LOGIC CẬP NHẬT GIAO DIỆN
+// ==========================================
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
 }
 
-// Cập nhật giao diện theo cài đặt
 function updateTheme() {
     const bgInput = document.getElementById('input-bg-image').value;
     let finalBgUrl = bgInput;
 
-    // Nếu input hiển thị text báo ảnh local thì dùng chuỗi Base64 đã lưu ẩn
     if (bgInput === "[Ảnh từ thiết bị]") {
         finalBgUrl = localBase64Image;
     } else {
-        localBase64Image = ""; // Nếu sếp gõ link mới, xoá ngay biến Base64 ẩn đi
+        // Nếu sếp nhập link URL khác vào ô chữ, xoá bộ nhớ DB cho nhẹ máy
+        if (localBase64Image !== "") {
+            localBase64Image = "";
+            saveImageToDB("");
+        }
     }
 
     root.style.setProperty('--bg-image', finalBgUrl ? `url(${finalBgUrl})` : 'none');
@@ -52,13 +97,11 @@ function updateTheme() {
     root.style.setProperty('--icon-size', document.getElementById('slider-icon-size').value + 'px');
     root.style.setProperty('--icon-radius', document.getElementById('slider-radius-icon').value + 'px');
     
-    // Nhóm Sửa Trang
     root.style.setProperty('--show-name', document.getElementById('check-show-name').checked ? 'block' : 'none');
     root.style.setProperty('--text-size', document.getElementById('slider-text-size').value + 'px');
     root.style.setProperty('--text-spacing', document.getElementById('slider-text-spacing').value + 'px');
     root.style.setProperty('--text-color', document.getElementById('color-text').value);
 
-    // Xử lý chuỗi bóng
     const shadowStr = shadowTemplates.find(t => t.id === document.getElementById('select-shadow-type').value)?.template
         .replace(/{x}/g, document.getElementById('slider-shadow-x').value)
         .replace(/{y}/g, document.getElementById('slider-shadow-y').value)
@@ -71,11 +114,9 @@ function updateTheme() {
     saveSettings();
 }
 
-// Lưu dữ liệu vào LocalStorage
 function saveSettings() {
     const config = {
         bgInputVal: document.getElementById('input-bg-image').value,
-        localBase64: localBase64Image, // Lưu ngầm chuỗi ảnh
         bgColor: document.getElementById('color-bg').value,
         containerColor: document.getElementById('color-container').value,
         containerOpacity: document.getElementById('slider-opacity').value,
@@ -96,8 +137,8 @@ function saveSettings() {
     localStorage.setItem('qal_theme', JSON.stringify(config));
 }
 
-// Khởi tạo các giá trị khi load trang
-function loadSettings() {
+// Hàm bất đồng bộ (async) để tải cả cài đặt thường và ảnh từ DB
+async function loadSettings() {
     const shadowSelect = document.getElementById('select-shadow-type');
     shadowSelect.innerHTML = '';
     shadowTemplates.forEach(t => {
@@ -106,11 +147,14 @@ function loadSettings() {
     });
 
     const saved = JSON.parse(localStorage.getItem('qal_theme')) || {};
-    
     document.getElementById('input-bg-image').value = saved.bgInputVal || '';
-    localBase64Image = saved.localBase64 || '';
     
-    // Mặc định màu chuẩn Apple nếu chưa tuỳ chỉnh
+    // Đọc ảnh nền xịn sò từ IndexedDB
+    try {
+        const savedImage = await loadImageFromDB();
+        if (savedImage) localBase64Image = savedImage;
+    } catch(e) { console.error("Lỗi lấy ảnh từ IndexedDB", e); }
+    
     document.getElementById('color-bg').value = saved.bgColor || (isLight ? '#f2f2f7' : '#000000');
     document.getElementById('color-container').value = saved.containerColor || (isLight ? '#ffffff' : '#ffffff');
     document.getElementById('slider-opacity').value = saved.containerOpacity || (isLight ? 60 : 15);
@@ -119,13 +163,11 @@ function loadSettings() {
     document.getElementById('slider-icon-size').value = saved.iconSize || 60;
     document.getElementById('slider-radius-icon').value = saved.iconRadius || 14;
     
-    // Nhóm sửa trang
     document.getElementById('check-show-name').checked = saved.showName !== false;
     document.getElementById('slider-text-size').value = saved.textSize || 11;
     document.getElementById('slider-text-spacing').value = saved.textSpacing || 0;
     document.getElementById('color-text').value = saved.textColor || (isLight ? '#000000' : '#ffffff');
 
-    // Nhóm bóng
     document.getElementById('select-shadow-type').value = saved.shadowType || 'outer';
     document.getElementById('slider-shadow-x').value = saved.shadowX || 0;
     document.getElementById('slider-shadow-y').value = saved.shadowY || 10;
@@ -136,21 +178,22 @@ function loadSettings() {
     updateTheme();
 }
 
-// Bắt sự kiện chọn ảnh từ thiết bị
+// Bắt sự kiện người dùng chọn file ảnh
 document.getElementById('input-bg-file').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.onload = (e) => {
-            localBase64Image = e.target.result; // Lưu ngầm chuỗi
-            document.getElementById('input-bg-image').value = "[Ảnh từ thiết bị]"; // Hiện gọn gàng
+        reader.onload = async (e) => {
+            localBase64Image = e.target.result; 
+            document.getElementById('input-bg-image').value = "[Ảnh từ thiết bị]"; 
+            await saveImageToDB(localBase64Image); // Đẩy ngay vào cơ sở dữ liệu IndexedDB
             updateTheme();
         };
         reader.readAsDataURL(file);
     }
 });
 
-// Làm mờ bảng cài đặt khi thao tác kéo thả slider
+// Chức năng làm mờ khung setting xuống còn 0.1 khi kéo Slider để nhìn rõ đằng sau
 const settingPanel = document.getElementById('setting-panel');
 document.querySelectorAll('input[type="range"]').forEach(el => {
     el.addEventListener('input', updateTheme);
@@ -160,7 +203,6 @@ document.querySelectorAll('input[type="range"]').forEach(el => {
     el.addEventListener('mouseup', () => settingPanel.classList.remove('transparent'));
 });
 
-// Cập nhật khi đổi màu/đổi kiểu select
-document.querySelectorAll('.modal-body input:not([type="range"]), .modal-body select').forEach(el => el.addEventListener('change', updateTheme));
+document.querySelectorAll('.modal-body input:not([type="range"]):not([type="file"]), .modal-body select').forEach(el => el.addEventListener('change', updateTheme));
 
 document.addEventListener('DOMContentLoaded', loadSettings);
