@@ -144,23 +144,33 @@
         </div>
     </div>
 
-    <!-- Kho Ứng Dụng -->
+    <!-- Kho Ứng Dụng (ĐÃ LÀM LẠI HEADER MAC OS VÀ THANH TÌM KIẾM PILL) -->
     <div id="store-modal" class="modal hidden">
         <div class="modal-content glass-panel" style="height: 90vh;">
-            <div class="modal-header">
-                <h2 data-i18n="store_title">Kho Ứng Dụng</h2>
-                <button id="btn-close-store" class="btn-close">&times;</button>
+            
+            <div class="modal-header mac-header">
+                <div class="mac-buttons">
+                    <div class="mac-btn close-btn" id="mac-close-store"></div>
+                    <div class="mac-btn min-btn"></div>
+                    <div class="mac-btn max-btn"></div>
+                </div>
+                <h2 data-i18n="store_title" class="title-center" style="width: 100%; text-align: center;">Kho Ứng Dụng</h2>
             </div>
-            <div class="store-search-bar">
+
+            <!-- Thanh tìm kiếm kiểu viên thuốc bo tròn giữa màn hình -->
+            <div class="pill-search-container">
                 <input type="text" id="input-search-app" placeholder="Tìm online API iTunes...">
-                <select id="select-store-region">
-                    <option value="VN">VN</option><option value="US">US</option>
-                    <option value="JP">JP</option><option value="KR">KR</option>
-                    <option value="CN">CN</option><option value="GB">GB</option>
-                </select>
-                <button id="btn-search-app" class="btn-icon">🔍</button>
+                <div class="search-actions">
+                    <select id="select-store-region">
+                        <option value="VN">VN</option><option value="US">US</option>
+                        <option value="JP">JP</option><option value="KR">KR</option>
+                        <option value="CN">CN</option><option value="GB">GB</option>
+                    </select>
+                    <button id="btn-search-app" class="btn-icon">🔍</button>
+                </div>
             </div>
-            <h4 id="store-status-text" style="margin-bottom: 10px; opacity: 0.7;">Ứng dụng có sẵn (Offline):</h4>
+
+            <h4 id="store-status-text" style="margin-bottom: 10px; opacity: 0.7; text-align: center;">Ứng dụng có sẵn (Offline):</h4>
             <div id="store-results" class="list-menu"></div>
         </div>
     </div>
@@ -175,7 +185,7 @@
         </div>
     </div>
 
-    <!-- Modal Info (Nâng cấp giao diện macOS) -->
+    <!-- Modal Info -->
     <div id="info-modal" class="modal hidden" style="align-items: center;">
         <div class="modal-content popup-panel" style="padding: 0; overflow: hidden;">
             <div class="modal-header mac-header" style="margin-bottom: 0; padding: 15px 20px; border-bottom: 1px solid rgba(120, 120, 128, 0.2); background: rgba(0,0,0,0.05);">
