@@ -1,5 +1,5 @@
 let appList = [];
-let offlineApps = []; // Chứa danh sách app lấy từ System/appios.json
+let offlineApps = []; 
 let isEditMode = false;
 let currentEditId = null;
 let currentTranslations = {};
@@ -46,7 +46,7 @@ async function loadAppsData() {
     if (local && local !== "[]") {
         appList = JSON.parse(local); 
     } else {
-        appList = []; // Lần chạy đầu tiên: mảng rỗng (Chắc chắn sẽ hiện dấu +)
+        appList = []; 
     }
     renderApps();
 }
@@ -58,7 +58,10 @@ function saveApps() {
 // --- RENDER GIAO DIỆN KHUNG APP & NÚT THÊM (+) ---
 function renderApps() {
     const grid = document.getElementById('app-grid');
-    grid.innerHTML = ''; // Làm sạch khung
+    
+    // Xóa tất cả các app-item cũ, giữ lại nút setting
+    const oldItems = grid.querySelectorAll('.app-item');
+    oldItems.forEach(item => item.remove());
     
     // Render các app đã có
     appList.slice(0, 24).forEach(app => {
@@ -66,7 +69,6 @@ function renderApps() {
         btn.className = 'app-item';
         
         const icon = document.createElement('img');
-        // Logic đọc icon offline/online chuẩn xác
         if (app.icon.startsWith('http')) {
             icon.src = app.icon;
         } else {
@@ -74,7 +76,6 @@ function renderApps() {
             icon.src = `icon/${fileName}`;
         }
         
-        // Fallback icon nếu file lỗi
         icon.onerror = function() { 
             this.onerror = () => { this.src = 'image/placeholder.png'; }; 
             this.src = `icon/${app.name}.png`; 
@@ -96,7 +97,6 @@ function renderApps() {
         
         const addIconBox = document.createElement('div');
         addIconBox.className = 'add-icon-box';
-        // Icon + màu xanh dương chuẩn Apple
         addIconBox.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
         
         const addTitle = document.createElement('span');
@@ -109,6 +109,10 @@ function renderApps() {
         grid.appendChild(addBtn);
     }
     
+    // Đảm bảo nút Setting luôn nằm dưới cùng trong khung
+    const btnSetting = document.getElementById('btn-setting');
+    grid.appendChild(btnSetting);
+    
     // Kích hoạt class CSS để rung icon nếu đang bật chế độ sửa
     grid.classList.toggle('edit-mode', isEditMode);
 }
@@ -116,11 +120,9 @@ function renderApps() {
 // --- LOGIC CLICK APP (CHẠY / XOÁ / SỬA TÊN) ---
 function handleAppClick(app) {
     if (!isEditMode) {
-        // Chạy qua phím tắt
         const shortcutUrl = `shortcuts://run-shortcut?name=Open%20App%20Launcher&input=text&text=${encodeURIComponent(app.id)}`;
         window.location.href = shortcutUrl;
     } else {
-        // Chế độ Edit: Hỏi Xoá hay Đổi Tên
         if(confirm(`Bạn muốn xoá ${app.name}?\nNhấn OK để Xoá, Cancel để Đổi Tên.`)) {
             appList = appList.filter(a => a.id !== app.id);
             saveApps();
