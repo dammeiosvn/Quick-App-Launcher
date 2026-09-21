@@ -1,7 +1,7 @@
 {
   "done": "Xong",
   "settings_title": "Cài Đặt",
-  "bg_source": "Đổi Ảnh Nền",
+  "bg_source": "Đổi Ảnh Nền (Tệp/Thư viện)",
   "bg_url": "Hoặc nhập URL Ảnh",
   "apply_bg": "Áp Dụng Nền",
   "cat_edit_page": "Sửa Trang",
@@ -26,6 +26,9 @@
   "shadow_color": "Màu Bóng",
   "apply_shadow": "Áp dụng bóng",
   "reset_shadow": "Làm mới",
+  "cat_data": "Cấu Hình & Dữ Liệu",
+  "export_config": "Xuất Cấu Hình (.json)",
+  "import_config": "Nhập Cấu Hình (.json)",
   "store_title": "Kho Ứng Dụng",
   "rename_title": "Đổi Tên Ứng Dụng",
   "save": "Lưu",
