@@ -45,7 +45,7 @@
                     <input type="text" id="input-bg-image" placeholder="https://...">
                 </div>
 
-                <!-- 🌟 NHÁNH SỬA TRANG (Gom Đổi tên/Xoá, Kích thước, Màu chữ) -->
+                <!-- 🌟 NHÁNH SỬA TRANG -->
                 <details class="setting-category" open>
                     <summary data-i18n="cat_edit_page">Sửa Trang</summary>
                     <button id="btn-enter-edit-mode" class="btn-full" style="margin-bottom: 15px;" data-i18n="enter_edit_mode">Bật Chế Độ Sửa / Xoá App</button>
@@ -137,14 +137,13 @@
                 </select>
                 <button id="btn-search-app" class="btn-icon">🔍</button>
             </div>
-            <!-- Chia tab hoặc hiện text gợi ý -->
             <h4 id="store-status-text" style="margin-bottom: 10px; opacity: 0.7;">Ứng dụng có sẵn (Offline):</h4>
             <div id="store-results" class="list-menu"></div>
         </div>
     </div>
 
     <!-- Modal Đổi Tên App -->
-    <div id="rename-modal" class="modal hidden">
+    <div id="rename-modal" class="modal hidden" style="align-items: center;">
         <div class="modal-content popup-panel">
             <h3 data-i18n="rename_title">Đổi Tên Ứng Dụng</h3>
             <input type="text" id="input-rename" class="full-input">
@@ -153,10 +152,13 @@
         </div>
     </div>
 
-    <!-- Modal Info & About (Giữ nguyên) -->
-    <div id="info-modal" class="modal hidden">
-        <div class="modal-content glass-panel">
-            <div class="modal-header"><h2 data-i18n="info_title">Thông Tin</h2><button id="btn-close-info" class="btn-close">&times;</button></div>
+    <!-- Modal Info (Đã chuyển ra giữa màn hình) -->
+    <div id="info-modal" class="modal hidden" style="align-items: center;">
+        <div class="modal-content popup-panel">
+            <div class="modal-header" style="justify-content: center; position: relative;">
+                <h2 data-i18n="info_title">Thông Tin</h2>
+                <button id="btn-close-info" class="btn-close" style="position: absolute; right: 0;">&times;</button>
+            </div>
             <div class="modal-body list-menu">
                 <a href="https://browse.shortcuty.app/user/Sentechtipsvn" target="_blank" class="menu-item" data-i18n="follow">Theo dõi</a>
                 <a href="mailto:sentechtips@gmail.com" class="menu-item" data-i18n="contact">Liên hệ</a>
@@ -165,7 +167,8 @@
         </div>
     </div>
 
-    <div id="about-popup" class="modal hidden">
+    <!-- Popup About (Giữa màn hình) -->
+    <div id="about-popup" class="modal hidden" style="align-items: center;">
         <div class="modal-content popup-panel">
             <h3>Quick App Launcher</h3>
             <p><strong>Version:</strong> 1.0</p>
