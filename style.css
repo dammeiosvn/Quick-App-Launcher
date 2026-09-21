@@ -1,5 +1,5 @@
 :root {
-    /* Mặc định là Dark Mode chuẩn Apple */
+    /* Tuỳ chỉnh của người dùng (App Grid) */
     --bg-color: #000000;
     --bg-image: none;
     --container-color: 255, 255, 255;
@@ -13,6 +13,11 @@
     --text-size: 11px;
     --text-spacing: 0px;
     --show-name: block;
+
+    /* Cố định Giao diện hệ thống (Settings/Info Modals) */
+    --ui-panel-bg: rgba(30, 30, 30, 0.9);
+    --ui-text-color: #ffffff;
+    --ui-input-bg: rgba(120, 120, 128, 0.3);
 }
 
 /* Tự động kích hoạt Light Mode chuẩn Apple */
@@ -23,16 +28,36 @@
         --container-opacity: 0.6;
         --text-color: #000000;
         --shadow-value: 0px 10px 20px 0px rgba(0,0,0,0.1);
+
+        --ui-panel-bg: rgba(255, 255, 255, 0.9);
+        --ui-text-color: #000000;
+        --ui-input-bg: rgba(120, 120, 128, 0.1);
     }
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    background-color: var(--bg-color);
+    /* Chặn triệt để hiệu ứng kéo giãn (overscroll) sinh ra viền xanh */
+    overflow: hidden; 
+    overscroll-behavior: none; 
+    touch-action: none;
+    transition: background-color 0.3s ease;
+}
 
-body { background-color: var(--bg-color); overflow: hidden; touch-action: manipulation; transition: background-color 0.3s ease; }
+* { box-sizing: inherit; }
 
 #app-background {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background-image: var(--bg-image); background-size: cover; background-position: center;
+    background-color: var(--bg-color);
+    background-image: var(--bg-image); 
+    background-size: cover; background-position: center;
     z-index: -1; transition: 0.3s ease;
 }
 
@@ -43,10 +68,12 @@ body { background-color: var(--bg-color); overflow: hidden; touch-action: manipu
     border-radius: var(--container-radius);
     box-shadow: var(--shadow-value);
     display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: auto;
-    align-content: start; /* Để app xếp từ trên xuống khi chưa đủ 24 app */
+    align-content: start;
     gap: 15px 10px; width: 90vw; max-width: 430px; height: 85vh; max-height: 932px;
     margin: 5vh auto 0; padding: 30px 20px; transition: 0.3s;
     overflow-y: auto;
+    /* Chỉ cho phép cuộn bên trong khung app */
+    touch-action: pan-y;
 }
 .glass-container::-webkit-scrollbar { display: none; }
 
@@ -61,30 +88,22 @@ body { background-color: var(--bg-color); overflow: hidden; touch-action: manipu
 .app-item span {
     margin-top: 5px; font-size: var(--text-size); font-weight: 500;
     color: var(--text-color); text-align: center; letter-spacing: var(--text-spacing);
-    text-shadow: 0 1px 2px rgba(0,0,0,0.3); white-space: nowrap; overflow: hidden; 
+    white-space: nowrap; overflow: hidden; 
     text-overflow: ellipsis; width: 100%; display: var(--show-name);
+    /* Bỏ đổ bóng chữ (text-shadow) theo yêu cầu */
 }
 
-/* --- Thiết kế Nút Thêm App (+) khi chưa có app --- */
-.add-app-btn {
-    background: transparent;
-}
+/* Thiết kế Nút Thêm App (+) */
+.add-app-btn { background: transparent; }
 .add-icon-box {
-    width: var(--icon-size);
-    height: var(--icon-size);
-    background-color: #fef8cc; /* Vàng nhạt */
-    border-radius: 16px;       /* Bo góc chuẩn 16px */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: var(--shadow-value);
-    transition: 0.2s;
+    width: var(--icon-size); height: var(--icon-size);
+    background-color: #fef8cc; border-radius: 16px; 
+    display: flex; justify-content: center; align-items: center;
+    box-shadow: var(--shadow-value); transition: 0.2s;
 }
-.add-app-btn:active .add-icon-box {
-    transform: scale(0.9);
-}
+.add-app-btn:active .add-icon-box { transform: scale(0.9); }
 
-/* --- Hiệu ứng Chế độ Xoá (Rung hệt iOS) --- */
+/* Hiệu ứng Chế độ Xoá (Rung hệt iOS) */
 @keyframes jiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
 .edit-mode .app-item:not(.add-app-btn) { animation: jiggle 0.3s infinite; }
 .edit-mode .app-item:not(.add-app-btn)::after {
@@ -92,9 +111,7 @@ body { background-color: var(--bg-color); overflow: hidden; touch-action: manipu
     background: #ff3b30; color: white; border-radius: 50%; font-weight: bold; font-size: 16px; display: flex;
     justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 2; border: 1.5px solid white;
 }
-.edit-mode .add-app-btn { opacity: 0; pointer-events: none; } /* Ẩn nút + khi sửa */
 
-/* Nút XONG (Done) hiển thị góc trên cùng bên phải */
 #btn-done-edit {
     position: fixed; top: 5vh; right: 5vw; 
     background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -111,25 +128,35 @@ body { background-color: var(--bg-color); overflow: hidden; touch-action: manipu
 #btn-setting.hidden { opacity: 0; pointer-events: none; }
 #btn-setting img { width: 100%; height: 100%; object-fit: contain; }
 
-/* Modal & UI Settings */
+/* Modal & UI Settings (Chuẩn Dark/Light) */
 .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1000; display: flex; justify-content: center; align-items: flex-end; transition: opacity 0.3s; }
 .modal.hidden { opacity: 0; pointer-events: none; }
 
-.glass-panel { background: rgba(var(--container-color), 0.85); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); width: 100%; max-height: 80vh; overflow-y: auto; border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 20px; transition: transform 0.3s, opacity 0.3s; }
+.glass-panel { 
+    background: var(--ui-panel-bg); color: var(--ui-text-color);
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); 
+    width: 100%; max-height: 80vh; overflow-y: auto; 
+    border-top-left-radius: 25px; border-top-right-radius: 25px; 
+    padding: 20px; transition: transform 0.3s, opacity 0.3s; 
+}
 .modal.hidden .glass-panel { transform: translateY(100%); }
 .glass-panel.transparent { opacity: 0.1 !important; pointer-events: none; } 
 
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; color: var(--text-color); }
-.btn-close { background: rgba(120,120,128,0.2); border: none; width: 30px; height: 30px; border-radius: 50%; color: var(--text-color); font-size: 18px; font-weight: bold; cursor: pointer; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; color: var(--ui-text-color); }
+.btn-close { background: var(--ui-input-bg); border: none; width: 30px; height: 30px; border-radius: 50%; color: var(--ui-text-color); font-size: 18px; font-weight: bold; cursor: pointer; }
 .btn-icon { background: none; border: none; cursor: pointer; font-size: 20px; margin-left: 10px; }
 .icon-info { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #007aff; color: #007aff; display: flex; justify-content: center; align-items: center; font-weight: bold; font-family: serif; }
 
-.setting-category { margin-bottom: 15px; background: rgba(120,120,128,0.1); border-radius: 12px; padding: 10px; }
-.setting-category summary { font-weight: bold; outline: none; padding: 5px; color: var(--text-color); cursor: pointer; }
-.setting-category summary::-webkit-details-marker { color: var(--text-color); }
-.setting-group { margin-top: 15px; color: var(--text-color); }
+.setting-category { margin-bottom: 15px; background: var(--ui-input-bg); border-radius: 12px; padding: 10px; }
+.setting-category summary { font-weight: bold; outline: none; padding: 5px; color: var(--ui-text-color); cursor: pointer; }
+.setting-category summary::-webkit-details-marker { color: var(--ui-text-color); }
+.setting-group { margin-top: 15px; color: var(--ui-text-color); }
 .setting-group.stacked { display: flex; flex-direction: column; gap: 8px; }
-.setting-group input[type="text"], .setting-group select { width: 100%; padding: 10px; border-radius: 10px; border: none; background: rgba(120,120,128,0.2); color: var(--text-color); outline: none; }
+.setting-group input[type="text"], .setting-group select { width: 100%; padding: 10px; border-radius: 10px; border: none; background: var(--ui-input-bg); color: var(--ui-text-color); outline: none; }
+
+/* Làm gọn nút chọn Tệp, ẩn mã base64 mặc định của file input */
+input[type="file"] { color: transparent; width: 100%; padding: 10px; border-radius: 10px; background: var(--ui-input-bg); }
+input[type="file"]::file-selector-button { background: #007aff; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; margin-right: 10px; cursor: pointer; }
 
 input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; }
 input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: rgba(120,120,128,0.3); border-radius: 3px; }
@@ -143,12 +170,12 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24p
 .store-search-bar select { width: 80px; }
 
 .list-menu { display: flex; flex-direction: column; gap: 10px; }
-.menu-item { background: rgba(120,120,128,0.15); padding: 15px; border-radius: 12px; color: var(--text-color); text-decoration: none; font-size: 16px; border: none; text-align: left; display: flex; align-items: center; gap: 15px; cursor: pointer; }
+.menu-item { background: var(--ui-input-bg); padding: 15px; border-radius: 12px; color: var(--ui-text-color); text-decoration: none; font-size: 16px; border: none; text-align: left; display: flex; align-items: center; gap: 15px; cursor: pointer; }
 .menu-item img { width: 40px; height: 40px; border-radius: 8px; }
 
-.popup-panel { background: var(--bg-color); width: 80%; border-radius: 20px; padding: 20px; text-align: center; color: var(--text-color); }
-.full-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(120,120,128,0.3); background: transparent; color: var(--text-color); margin-bottom: 15px; font-size: 16px; }
+.popup-panel { background: var(--ui-panel-bg); color: var(--ui-text-color); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); width: 80%; border-radius: 20px; padding: 20px; text-align: center; }
+.full-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--ui-input-bg); background: var(--ui-input-bg); color: var(--ui-text-color); margin-bottom: 15px; font-size: 16px; }
 .btn-full { width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 12px; background: #007aff; color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
 .btn-full:active { transform: scale(0.97); }
-.btn-full.alt { background: rgba(120,120,128,0.3); color: var(--text-color); }
-.version-text { text-align: center; opacity: 0.5; font-size: 12px; margin-top: 20px; color: var(--text-color); }
+.btn-full.alt { background: var(--ui-input-bg); color: var(--ui-text-color); }
+.version-text { text-align: center; opacity: 0.5; font-size: 12px; margin-top: 20px; color: var(--ui-text-color); }
