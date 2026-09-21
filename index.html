@@ -14,7 +14,7 @@
     <!-- Nền tổng thể -->
     <div id="app-background"></div>
 
-    <!-- Nút Xong (Hoàn tất chỉnh sửa) hệt chuẩn Apple -->
+    <!-- Nút Xong (Hoàn tất chỉnh sửa) -->
     <button id="btn-done-edit" class="hidden" data-i18n="done">Xong</button>
 
     <!-- Khung chứa App chính -->
@@ -22,98 +22,115 @@
         <!-- Icon và nút + sẽ render qua main.js -->
     </div>
 
-    <!-- Nút Cài đặt -->
+    <!-- Nút Cài đặt (Đã chuẩn hoá 40x40px) -->
     <button id="btn-setting">
         <img src="image/icon_setting.png" alt="Settings">
     </button>
 
-    <!-- Modal Cài đặt -->
+    <!-- Modal Cài đặt (Được làm lại giao diện sang trọng) -->
     <div id="setting-modal" class="modal hidden">
         <div class="modal-content glass-panel" id="setting-panel">
-            <div class="modal-header">
-                <h2 data-i18n="settings_title">Cài Đặt</h2>
-                <button id="btn-info" class="btn-icon"><div class="icon-info">i</div></button>
-                <button id="btn-close-setting" class="btn-close">&times;</button>
+            
+            <!-- Header phong cách macOS -->
+            <div class="modal-header mac-header">
+                <div class="mac-buttons">
+                    <div class="mac-btn close-btn" id="mac-close"></div>
+                    <div class="mac-btn min-btn"></div>
+                    <div class="mac-btn max-btn"></div>
+                </div>
+                <h2 data-i18n="settings_title" class="title-center">Cài Đặt</h2>
+                <div class="header-actions">
+                    <button id="btn-info" class="btn-icon"><div class="icon-info">i</div></button>
+                    <!-- Nút close mặc định (X) có thể ẩn trong CSS vì đã có nút đỏ macOS -->
+                    <button id="btn-close-setting" class="btn-close" style="display: none;">&times;</button>
+                </div>
             </div>
             
             <div class="modal-body">
-                <!-- Nguồn Nền -->
-                <div class="setting-group stacked">
+                <!-- Nguồn Nền (Cơ bản để ngoài cho dễ chọn) -->
+                <div class="setting-group stacked base-setting">
                     <label data-i18n="bg_source">Đổi Ảnh Nền (Tệp/Thư viện)</label>
                     <input type="file" id="input-bg-file" accept="image/*">
-                    <label data-i18n="bg_url">Hoặc nhập URL Ảnh</label>
+                    <label data-i18n="bg_url" style="margin-top: 10px;">Hoặc nhập URL Ảnh</label>
                     <input type="text" id="input-bg-image" placeholder="https://...">
                 </div>
 
-                <!-- 🌟 NHÁNH SỬA TRANG -->
-                <details class="setting-category" open>
+                <!-- 🌟 PILL BUTTON: SỬA TRANG -->
+                <details class="setting-category pill-style">
                     <summary data-i18n="cat_edit_page">Sửa Trang</summary>
-                    <button id="btn-enter-edit-mode" class="btn-full" style="margin-bottom: 15px;" data-i18n="enter_edit_mode">Bật Chế Độ Sửa / Xoá App</button>
-                    
-                    <div class="setting-group stacked">
-                        <label data-i18n="toggle_name">Hiển Thị Tên Ứng Dụng</label>
-                        <input type="checkbox" id="check-show-name" checked>
-                    </div>
-                    <div class="setting-group stacked">
-                        <label data-i18n="text_size">Kích Thước Chữ (px)</label>
-                        <input type="range" id="slider-text-size" min="8" max="18" value="11">
-                    </div>
-                    <div class="setting-group stacked">
-                        <label data-i18n="text_spacing">Co Giãn Chữ (Spacing)</label>
-                        <input type="range" id="slider-text-spacing" min="0" max="5" step="0.5" value="0">
-                    </div>
-                    <div class="setting-group stacked">
-                        <label data-i18n="text_color">Màu Chữ (Trống = Theo hệ thống)</label>
-                        <input type="color" id="color-text" class="apple-color-picker">
-                    </div>
-                </details>
-
-                <!-- Nhóm Khung -->
-                <details class="setting-category">
-                    <summary data-i18n="cat_container">Nhóm Khung & Nền</summary>
-                    <div class="setting-group stacked">
-                        <label data-i18n="bg_color">Màu Nền Chính</label>
-                        <input type="color" id="color-bg" class="apple-color-picker">
-                    </div>
-                    <div class="setting-group stacked">
-                        <label data-i18n="container_color">Màu Khung Chứa</label>
-                        <input type="color" id="color-container" class="apple-color-picker">
-                    </div>
-                    <div class="setting-group stacked">
-                        <label data-i18n="bg_opacity">Độ Đậm Nhạt (Opacity Khung)</label>
-                        <input type="range" id="slider-opacity" min="0" max="100" value="30">
-                    </div>
-                    <div class="setting-group stacked">
-                        <label data-i18n="radius_container">Bo Góc Khung (px)</label>
-                        <input type="range" id="slider-radius-container" min="0" max="100" value="35">
+                    <div class="pill-content">
+                        <button id="btn-enter-edit-mode" class="btn-full" style="margin-bottom: 15px;" data-i18n="enter_edit_mode">Bật Chế Độ Sửa / Xoá App</button>
+                        <div class="setting-group stacked">
+                            <label data-i18n="toggle_name">Hiển Thị Tên Ứng Dụng</label>
+                            <input type="checkbox" id="check-show-name" checked>
+                        </div>
+                        <div class="setting-group stacked">
+                            <label data-i18n="text_size">Kích Thước Chữ (px)</label>
+                            <input type="range" id="slider-text-size" min="8" max="18" value="11">
+                        </div>
+                        <div class="setting-group stacked">
+                            <label data-i18n="text_spacing">Co Giãn Chữ (Spacing)</label>
+                            <input type="range" id="slider-text-spacing" min="0" max="5" step="0.5" value="0">
+                        </div>
+                        <div class="setting-group stacked">
+                            <label data-i18n="text_color">Màu Chữ (Trống = Theo hệ thống)</label>
+                            <input type="color" id="color-text" class="apple-color-picker">
+                        </div>
                     </div>
                 </details>
 
-                <!-- Nhóm Icon -->
-                <details class="setting-category">
-                    <summary data-i18n="cat_icon">Nhóm Kích Thước Icon</summary>
-                    <div class="setting-group stacked">
-                        <label data-i18n="icon_size">Kích Thước Icon (px)</label>
-                        <input type="range" id="slider-icon-size" min="40" max="90" value="60">
-                    </div>
-                    <div class="setting-group stacked">
-                        <label data-i18n="radius_icon">Bo Góc Icon (px)</label>
-                        <input type="range" id="slider-radius-icon" min="0" max="45" value="14">
+                <!-- 🌟 PILL BUTTON: KHUNG & NỀN -->
+                <details class="setting-category pill-style">
+                    <summary data-i18n="cat_container">Khung & Nền</summary>
+                    <div class="pill-content">
+                        <div class="setting-group stacked">
+                            <label data-i18n="bg_color">Màu Nền Chính</label>
+                            <input type="color" id="color-bg" class="apple-color-picker">
+                        </div>
+                        <div class="setting-group stacked">
+                            <label data-i18n="container_color">Màu Khung Chứa</label>
+                            <input type="color" id="color-container" class="apple-color-picker">
+                        </div>
+                        <div class="setting-group stacked">
+                            <label data-i18n="bg_opacity">Độ Đậm Nhạt (Opacity Khung)</label>
+                            <input type="range" id="slider-opacity" min="0" max="100" value="30">
+                        </div>
+                        <div class="setting-group stacked">
+                            <label data-i18n="radius_container">Bo Góc Khung (px)</label>
+                            <input type="range" id="slider-radius-container" min="0" max="100" value="35">
+                        </div>
                     </div>
                 </details>
 
-                <!-- Nhóm Bóng -->
-                <details class="setting-category">
-                    <summary data-i18n="cat_shadow">Nhóm Đổ Bóng</summary>
-                    <div class="setting-group">
-                        <label data-i18n="shadow_type">Kiểu Bóng</label>
-                        <select id="select-shadow-type"></select>
+                <!-- 🌟 PILL BUTTON: KÍCH THƯỚC ICON -->
+                <details class="setting-category pill-style">
+                    <summary data-i18n="cat_icon">Kích Thước Icon</summary>
+                    <div class="pill-content">
+                        <div class="setting-group stacked">
+                            <label data-i18n="icon_size">Kích Thước Icon (px)</label>
+                            <input type="range" id="slider-icon-size" min="40" max="90" value="60">
+                        </div>
+                        <div class="setting-group stacked">
+                            <label data-i18n="radius_icon">Bo Góc Icon (px)</label>
+                            <input type="range" id="slider-radius-icon" min="0" max="45" value="14">
+                        </div>
                     </div>
-                    <div class="setting-group stacked"><label>Trục X</label><input type="range" id="slider-shadow-x" min="-20" max="20" value="0"></div>
-                    <div class="setting-group stacked"><label>Trục Y</label><input type="range" id="slider-shadow-y" min="-20" max="20" value="10"></div>
-                    <div class="setting-group stacked"><label>Blur</label><input type="range" id="slider-shadow-b" min="0" max="50" value="20"></div>
-                    <div class="setting-group stacked"><label>Spread</label><input type="range" id="slider-shadow-s" min="-20" max="20" value="0"></div>
-                    <div class="setting-group stacked"><label data-i18n="shadow_color">Màu Bóng</label><input type="color" id="color-shadow" class="apple-color-picker"></div>
+                </details>
+
+                <!-- 🌟 PILL BUTTON: ĐỔ BÓNG -->
+                <details class="setting-category pill-style">
+                    <summary data-i18n="cat_shadow">Đổ Bóng</summary>
+                    <div class="pill-content">
+                        <div class="setting-group">
+                            <label data-i18n="shadow_type">Kiểu Bóng</label>
+                            <select id="select-shadow-type"></select>
+                        </div>
+                        <div class="setting-group stacked"><label>Trục X</label><input type="range" id="slider-shadow-x" min="-20" max="20" value="0"></div>
+                        <div class="setting-group stacked"><label>Trục Y</label><input type="range" id="slider-shadow-y" min="-20" max="20" value="10"></div>
+                        <div class="setting-group stacked"><label>Blur</label><input type="range" id="slider-shadow-b" min="0" max="50" value="20"></div>
+                        <div class="setting-group stacked"><label>Spread</label><input type="range" id="slider-shadow-s" min="-20" max="20" value="0"></div>
+                        <div class="setting-group stacked"><label data-i18n="shadow_color">Màu Bóng</label><input type="color" id="color-shadow" class="apple-color-picker"></div>
+                    </div>
                 </details>
                 
                 <div class="version-text">V 1.0</div>
@@ -121,7 +138,7 @@
         </div>
     </div>
 
-    <!-- Kho Ứng Dụng (App Store Offline & Online) -->
+    <!-- Kho Ứng Dụng -->
     <div id="store-modal" class="modal hidden">
         <div class="modal-content glass-panel" style="height: 90vh;">
             <div class="modal-header">
@@ -152,7 +169,7 @@
         </div>
     </div>
 
-    <!-- Modal Info -->
+    <!-- Modal Info (Giữa màn hình) -->
     <div id="info-modal" class="modal hidden" style="align-items: center;">
         <div class="modal-content popup-panel">
             <div class="modal-header" style="justify-content: center; position: relative;">
