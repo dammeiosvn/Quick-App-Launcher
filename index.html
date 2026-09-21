@@ -14,6 +14,13 @@
     <!-- Tooltip hiển thị giá trị Slider -->
     <div id="slider-tooltip" class="hidden"></div>
 
+    <!-- Menu Long-press (Context Menu) -->
+    <div id="context-menu" class="context-menu hidden">
+        <button id="ctx-rename" class="ctx-item">✏️ Đổi tên</button>
+        <button id="ctx-delete" class="ctx-item ctx-delete">🗑️ Xoá</button>
+        <button id="ctx-share" class="ctx-item">🔗 Chia sẻ</button>
+    </div>
+
     <!-- Nền tổng thể -->
     <div id="app-background"></div>
 
@@ -101,7 +108,6 @@
                             <label data-i18n="radius_container">Bo Góc Khung (px)</label>
                             <input type="range" id="slider-radius-container" min="0" max="100" value="35">
                         </div>
-                        <!-- Thêm slider co giãn khung -->
                         <div class="setting-group stacked">
                             <label data-i18n="container_gap">Khoảng Cách Khung (px)</label>
                             <input type="range" id="slider-container-gap" min="0" max="30" value="15">
@@ -121,7 +127,6 @@
                             <label data-i18n="radius_icon">Bo Góc Icon (px)</label>
                             <input type="range" id="slider-radius-icon" min="0" max="45" value="14">
                         </div>
-                        <!-- Thêm slider co giãn icon -->
                         <div class="setting-group stacked">
                             <label data-i18n="icon_gap">Khoảng Cách Icon (px)</label>
                             <input type="range" id="slider-icon-gap" min="0" max="20" value="0">
@@ -150,11 +155,20 @@
                         <div class="setting-group stacked"><label>Spread</label><input type="range" id="slider-shadow-s" min="-20" max="20" value="0"></div>
                         <div class="setting-group stacked"><label data-i18n="shadow_color">Màu Bóng</label><input type="color" id="color-shadow" class="apple-color-picker"></div>
                         
-                        <!-- Nút Áp Dụng Đa Bóng -->
                         <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button id="btn-apply-shadow" class="btn-full" data-i18n="apply_shadow">Áp dụng bóng</button>
                             <button id="btn-reset-shadow" class="btn-full alt" data-i18n="reset_shadow">Làm mới</button>
                         </div>
+                    </div>
+                </details>
+
+                <!-- PILL BUTTON: CẤU HÌNH & DỮ LIỆU (MỚI) -->
+                <details class="setting-category pill-style">
+                    <summary data-i18n="cat_data">Cấu Hình & Dữ Liệu</summary>
+                    <div class="pill-content">
+                        <button id="btn-export-config" class="btn-full" data-i18n="export_config">Xuất Cấu Hình (.json)</button>
+                        <input type="file" id="input-import-config" accept=".json" style="display: none;">
+                        <button id="btn-import-config" class="btn-full alt" style="margin-top: 10px;" data-i18n="import_config">Nhập Cấu Hình (.json)</button>
                     </div>
                 </details>
                 
