@@ -30,7 +30,7 @@ function applyTranslations(rootElement) {
 
 // --- INIT LƯU TRỮ APP (OFFLINE & ONLINE) ---
 async function loadAppsData() {
-    // 1. Tải danh sách App Offline từ thư mục System để đưa vào Kho
+    // 1. Tải danh sách App Offline từ thư mục System
     try {
         const res = await fetch('System/appios.json');
         if (res.ok) {
@@ -74,7 +74,7 @@ function renderApps() {
             icon.src = `icon/${fileName}`;
         }
         
-        // Fallback icon nếu file lỗi hoặc gọi sai tên
+        // Fallback icon nếu file lỗi
         icon.onerror = function() { 
             this.onerror = () => { this.src = 'image/placeholder.png'; }; 
             this.src = `icon/${app.name}.png`; 
@@ -89,7 +89,7 @@ function renderApps() {
         grid.appendChild(btn);
     });
 
-    // Render nút Thêm (+) thông minh: Luôn hiện nếu dưới 24 app, kể cả khi 0 app
+    // Render nút Thêm (+) thông minh
     if (appList.length < 24) {
         const addBtn = document.createElement('button');
         addBtn.className = 'app-item add-app-btn';
@@ -105,7 +105,6 @@ function renderApps() {
         addBtn.appendChild(addIconBox);
         addBtn.appendChild(addTitle);
         
-        // Bấm thêm app bất cứ lúc nào
         addBtn.onclick = () => openStore();
         grid.appendChild(addBtn);
     }
@@ -205,7 +204,6 @@ document.getElementById('btn-search-app').onclick = async () => {
     const query = document.getElementById('input-search-app').value.trim();
     const region = document.getElementById('select-store-region').value;
     
-    // Nếu khung tìm kiếm trống, quay lại list Offline
     if(!query) {
         renderOfflineStore();
         return;
@@ -252,7 +250,9 @@ document.getElementById('btn-info').onclick = () => {
     toggleModal('setting-modal', false); 
     toggleModal('info-modal', true); 
 };
-document.getElementById('btn-close-info').onclick = () => toggleModal('info-modal', false);
+
+// 🌟 XỬ LÝ NÚT ĐỎ macOS ĐÓNG INFO 🌟
+document.getElementById('mac-close-info').onclick = () => toggleModal('info-modal', false);
 
 document.getElementById('btn-about').onclick = () => { 
     toggleModal('info-modal', false); 
