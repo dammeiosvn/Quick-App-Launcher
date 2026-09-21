@@ -19,15 +19,17 @@ const shadowTemplates = [
 ];
 
 const root = document.documentElement;
+
+// Hàm check hệ thống đang dùng Dark hay Light Mode
 const isLight = window.matchMedia('(prefers-color-scheme: light)').matches;
 
-// Hàm chuyển mã Hex sang RGB để tích hợp mờ khung nền
+// Đổi mã Hex sang RGB để làm Opacity
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
 }
 
-// Hàm đẩy cấu hình lên CSS gốc
+// Cập nhật giao diện theo cài đặt
 function updateTheme() {
     const bgUrl = document.getElementById('input-bg-image').value;
     root.style.setProperty('--bg-image', bgUrl ? `url(${bgUrl})` : 'none');
@@ -39,11 +41,14 @@ function updateTheme() {
     
     root.style.setProperty('--icon-size', document.getElementById('slider-icon-size').value + 'px');
     root.style.setProperty('--icon-radius', document.getElementById('slider-radius-icon').value + 'px');
+    
+    // Nhóm Sửa Trang
+    root.style.setProperty('--show-name', document.getElementById('check-show-name').checked ? 'block' : 'none');
     root.style.setProperty('--text-size', document.getElementById('slider-text-size').value + 'px');
     root.style.setProperty('--text-spacing', document.getElementById('slider-text-spacing').value + 'px');
     root.style.setProperty('--text-color', document.getElementById('color-text').value);
-    root.style.setProperty('--show-name', document.getElementById('check-show-name').checked ? 'block' : 'none');
 
+    // Xử lý chuỗi bóng
     const shadowStr = shadowTemplates.find(t => t.id === document.getElementById('select-shadow-type').value)?.template
         .replace(/{x}/g, document.getElementById('slider-shadow-x').value)
         .replace(/{y}/g, document.getElementById('slider-shadow-y').value)
@@ -52,10 +57,11 @@ function updateTheme() {
         .replace(/{c}/g, document.getElementById('color-shadow').value);
     
     if (shadowStr) root.style.setProperty('--shadow-value', shadowStr);
+    
     saveSettings();
 }
 
-// Lưu dữ liệu setting vào LocalStorage
+// Lưu dữ liệu vào LocalStorage
 function saveSettings() {
     const config = {
         bgUrl: document.getElementById('input-bg-image').value,
@@ -79,40 +85,46 @@ function saveSettings() {
     localStorage.setItem('qal_theme', JSON.stringify(config));
 }
 
-// Tải cài đặt lúc khởi động web
+// Khởi tạo các giá trị khi load trang
 function loadSettings() {
     const shadowSelect = document.getElementById('select-shadow-type');
-    shadowSelect.innerHTML = ''; // Làm sạch select
+    shadowSelect.innerHTML = '';
     shadowTemplates.forEach(t => {
         let opt = document.createElement('option'); opt.value = t.id; opt.textContent = t.name;
         opt.dataset.i18n = t.nameKey; shadowSelect.appendChild(opt);
     });
 
     const saved = JSON.parse(localStorage.getItem('qal_theme')) || {};
+    
     document.getElementById('input-bg-image').value = saved.bgUrl || '';
+    
+    // Mặc định màu chuẩn Apple nếu chưa tuỳ chỉnh
     document.getElementById('color-bg').value = saved.bgColor || (isLight ? '#f2f2f7' : '#000000');
-    document.getElementById('color-container').value = saved.containerColor || (isLight ? '#ffffff' : '#ffffff');
+    document.getElementById('color-container').value = saved.containerColor || '#ffffff';
     document.getElementById('slider-opacity').value = saved.containerOpacity || (isLight ? 60 : 15);
     document.getElementById('slider-radius-container').value = saved.containerRadius || 35;
     
     document.getElementById('slider-icon-size').value = saved.iconSize || 60;
     document.getElementById('slider-radius-icon').value = saved.iconRadius || 14;
+    
+    // Nhóm sửa trang
+    document.getElementById('check-show-name').checked = saved.showName !== false;
     document.getElementById('slider-text-size').value = saved.textSize || 11;
     document.getElementById('slider-text-spacing').value = saved.textSpacing || 0;
     document.getElementById('color-text').value = saved.textColor || (isLight ? '#000000' : '#ffffff');
-    document.getElementById('check-show-name').checked = saved.showName !== false;
 
+    // Nhóm bóng
     document.getElementById('select-shadow-type').value = saved.shadowType || 'outer';
     document.getElementById('slider-shadow-x').value = saved.shadowX || 0;
     document.getElementById('slider-shadow-y').value = saved.shadowY || 10;
     document.getElementById('slider-shadow-b').value = saved.shadowB || 20;
     document.getElementById('slider-shadow-s').value = saved.shadowS || 0;
-    document.getElementById('color-shadow').value = saved.shadowColor || (isLight ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.5)');
+    document.getElementById('color-shadow').value = saved.shadowColor || (isLight ? '#cccccc' : '#000000');
     
     updateTheme();
 }
 
-// Bắt sự kiện người dùng thêm ảnh vào thư viện bằng Tệp
+// Chọn ảnh từ thiết bị
 document.getElementById('input-bg-file').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
@@ -125,7 +137,7 @@ document.getElementById('input-bg-file').addEventListener('change', function(e) 
     }
 });
 
-// Chức năng làm mờ khung setting xuống còn 0.1 khi kéo Slider để nhìn rõ đằng sau
+// Làm mờ bảng cài đặt khi thao tác kéo thả slider
 const settingPanel = document.getElementById('setting-panel');
 document.querySelectorAll('input[type="range"]').forEach(el => {
     el.addEventListener('input', updateTheme);
@@ -135,6 +147,7 @@ document.querySelectorAll('input[type="range"]').forEach(el => {
     el.addEventListener('mouseup', () => settingPanel.classList.remove('transparent'));
 });
 
+// Cập nhật khi đổi màu/đổi kiểu select
 document.querySelectorAll('.modal-body input:not([type="range"]), .modal-body select').forEach(el => el.addEventListener('change', updateTheme));
 
 document.addEventListener('DOMContentLoaded', loadSettings);
