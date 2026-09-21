@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="CSS/style.css">
 </head>
 <body>
+    <!-- Tooltip hiển thị giá trị Slider -->
+    <div id="slider-tooltip" class="hidden"></div>
+
     <!-- Nền tổng thể -->
     <div id="app-background"></div>
 
@@ -20,12 +23,11 @@
     <!-- Khung chứa App chính -->
     <div class="glass-container" id="app-grid">
         <!-- Icon và nút + sẽ render qua main.js -->
+        <!-- Nút Cài đặt (Đã di chuyển vào trong khung) -->
+        <button id="btn-setting">
+            <img src="image/icon_setting.png" alt="Settings">
+        </button>
     </div>
-
-    <!-- Nút Cài đặt -->
-    <button id="btn-setting">
-        <img src="image/icon_setting.png" alt="Settings">
-    </button>
 
     <!-- Modal Cài đặt -->
     <div id="setting-modal" class="modal hidden">
@@ -99,6 +101,11 @@
                             <label data-i18n="radius_container">Bo Góc Khung (px)</label>
                             <input type="range" id="slider-radius-container" min="0" max="100" value="35">
                         </div>
+                        <!-- Thêm slider co giãn khung -->
+                        <div class="setting-group stacked">
+                            <label data-i18n="container_gap">Khoảng Cách Khung (px)</label>
+                            <input type="range" id="slider-container-gap" min="0" max="30" value="15">
+                        </div>
                     </div>
                 </details>
 
@@ -114,6 +121,11 @@
                             <label data-i18n="radius_icon">Bo Góc Icon (px)</label>
                             <input type="range" id="slider-radius-icon" min="0" max="45" value="14">
                         </div>
+                        <!-- Thêm slider co giãn icon -->
+                        <div class="setting-group stacked">
+                            <label data-i18n="icon_gap">Khoảng Cách Icon (px)</label>
+                            <input type="range" id="slider-icon-gap" min="0" max="20" value="0">
+                        </div>
                     </div>
                 </details>
 
@@ -121,6 +133,13 @@
                 <details class="setting-category pill-style">
                     <summary data-i18n="cat_shadow">Đổ Bóng</summary>
                     <div class="pill-content">
+                        <div class="setting-group">
+                            <label data-i18n="shadow_target">Đối Tượng Đổ Bóng</label>
+                            <select id="select-shadow-target">
+                                <option value="icon">Icon</option>
+                                <option value="container">Khung Chứa</option>
+                            </select>
+                        </div>
                         <div class="setting-group">
                             <label data-i18n="shadow_type">Kiểu Bóng</label>
                             <select id="select-shadow-type"></select>
@@ -144,7 +163,7 @@
         </div>
     </div>
 
-    <!-- Kho Ứng Dụng (ĐÃ LÀM LẠI HEADER MAC OS VÀ THANH TÌM KIẾM PILL) -->
+    <!-- Kho Ứng Dụng -->
     <div id="store-modal" class="modal hidden">
         <div class="modal-content glass-panel" style="height: 90vh;">
             
@@ -157,7 +176,6 @@
                 <h2 data-i18n="store_title" class="title-center" style="width: 100%; text-align: center;">Kho Ứng Dụng</h2>
             </div>
 
-            <!-- Thanh tìm kiếm kiểu viên thuốc bo tròn giữa màn hình -->
             <div class="pill-search-container">
                 <input type="text" id="input-search-app" placeholder="Tìm online API iTunes...">
                 <div class="search-actions">
