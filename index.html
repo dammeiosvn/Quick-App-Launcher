@@ -22,40 +22,40 @@
         <!-- Icon và nút + sẽ render qua main.js -->
     </div>
 
-    <!-- Nút Cài đặt (Đã chuẩn hoá 40x40px) -->
+    <!-- Nút Cài đặt -->
     <button id="btn-setting">
         <img src="image/icon_setting.png" alt="Settings">
     </button>
 
-    <!-- Modal Cài đặt (Được làm lại giao diện sang trọng) -->
+    <!-- Modal Cài đặt -->
     <div id="setting-modal" class="modal hidden">
         <div class="modal-content glass-panel" id="setting-panel">
             
             <!-- Header phong cách macOS -->
             <div class="modal-header mac-header">
                 <div class="mac-buttons">
-                    <div class="mac-btn close-btn" id="mac-close"></div>
+                    <div class="mac-btn close-btn" id="mac-close-setting"></div>
                     <div class="mac-btn min-btn"></div>
                     <div class="mac-btn max-btn"></div>
                 </div>
                 <h2 data-i18n="settings_title" class="title-center">Cài Đặt</h2>
                 <div class="header-actions">
                     <button id="btn-info" class="btn-icon"><div class="icon-info">i</div></button>
-                    <!-- Nút close mặc định (X) có thể ẩn trong CSS vì đã có nút đỏ macOS -->
-                    <button id="btn-close-setting" class="btn-close" style="display: none;">&times;</button>
                 </div>
             </div>
             
             <div class="modal-body">
-                <!-- Nguồn Nền (Cơ bản để ngoài cho dễ chọn) -->
+                <!-- Nguồn Nền -->
                 <div class="setting-group stacked base-setting">
                     <label data-i18n="bg_source">Đổi Ảnh Nền (Tệp/Thư viện)</label>
                     <input type="file" id="input-bg-file" accept="image/*">
                     <label data-i18n="bg_url" style="margin-top: 10px;">Hoặc nhập URL Ảnh</label>
                     <input type="text" id="input-bg-image" placeholder="https://...">
+                    <!-- Nút Áp Dụng Nền -->
+                    <button id="btn-apply-bg" class="btn-full" style="margin-top: 15px;" data-i18n="apply_bg">Áp Dụng Nền</button>
                 </div>
 
-                <!-- 🌟 PILL BUTTON: SỬA TRANG -->
+                <!-- PILL BUTTON: SỬA TRANG -->
                 <details class="setting-category pill-style">
                     <summary data-i18n="cat_edit_page">Sửa Trang</summary>
                     <div class="pill-content">
@@ -79,7 +79,7 @@
                     </div>
                 </details>
 
-                <!-- 🌟 PILL BUTTON: KHUNG & NỀN -->
+                <!-- PILL BUTTON: KHUNG & NỀN -->
                 <details class="setting-category pill-style">
                     <summary data-i18n="cat_container">Khung & Nền</summary>
                     <div class="pill-content">
@@ -102,7 +102,7 @@
                     </div>
                 </details>
 
-                <!-- 🌟 PILL BUTTON: KÍCH THƯỚC ICON -->
+                <!-- PILL BUTTON: KÍCH THƯỚC ICON -->
                 <details class="setting-category pill-style">
                     <summary data-i18n="cat_icon">Kích Thước Icon</summary>
                     <div class="pill-content">
@@ -117,7 +117,7 @@
                     </div>
                 </details>
 
-                <!-- 🌟 PILL BUTTON: ĐỔ BÓNG -->
+                <!-- PILL BUTTON: ĐỔ BÓNG ĐA LỚP -->
                 <details class="setting-category pill-style">
                     <summary data-i18n="cat_shadow">Đổ Bóng</summary>
                     <div class="pill-content">
@@ -130,6 +130,12 @@
                         <div class="setting-group stacked"><label>Blur</label><input type="range" id="slider-shadow-b" min="0" max="50" value="20"></div>
                         <div class="setting-group stacked"><label>Spread</label><input type="range" id="slider-shadow-s" min="-20" max="20" value="0"></div>
                         <div class="setting-group stacked"><label data-i18n="shadow_color">Màu Bóng</label><input type="color" id="color-shadow" class="apple-color-picker"></div>
+                        
+                        <!-- Nút Áp Dụng Đa Bóng -->
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button id="btn-apply-shadow" class="btn-full" data-i18n="apply_shadow">Áp dụng bóng</button>
+                            <button id="btn-reset-shadow" class="btn-full alt" data-i18n="reset_shadow">Làm mới</button>
+                        </div>
                     </div>
                 </details>
                 
@@ -169,14 +175,18 @@
         </div>
     </div>
 
-    <!-- Modal Info (Giữa màn hình) -->
+    <!-- Modal Info (Nâng cấp giao diện macOS) -->
     <div id="info-modal" class="modal hidden" style="align-items: center;">
-        <div class="modal-content popup-panel">
-            <div class="modal-header" style="justify-content: center; position: relative;">
-                <h2 data-i18n="info_title">Thông Tin</h2>
-                <button id="btn-close-info" class="btn-close" style="position: absolute; right: 0;">&times;</button>
+        <div class="modal-content popup-panel" style="padding: 0; overflow: hidden;">
+            <div class="modal-header mac-header" style="margin-bottom: 0; padding: 15px 20px; border-bottom: 1px solid rgba(120, 120, 128, 0.2); background: rgba(0,0,0,0.05);">
+                <div class="mac-buttons" style="position: absolute; left: 20px;">
+                    <div class="mac-btn close-btn" id="mac-close-info"></div>
+                    <div class="mac-btn min-btn"></div>
+                    <div class="mac-btn max-btn"></div>
+                </div>
+                <h2 data-i18n="info_title" class="title-center" style="width: 100%; text-align: center;">Thông Tin</h2>
             </div>
-            <div class="modal-body list-menu">
+            <div class="modal-body list-menu" style="padding: 20px;">
                 <a href="https://browse.shortcuty.app/user/Sentechtipsvn" target="_blank" class="menu-item" data-i18n="follow">Theo dõi</a>
                 <a href="mailto:sentechtips@gmail.com" class="menu-item" data-i18n="contact">Liên hệ</a>
                 <button id="btn-about" class="menu-item" data-i18n="about">Giới thiệu</button>
