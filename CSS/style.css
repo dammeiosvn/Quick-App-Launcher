@@ -1,0 +1,227 @@
+:root {
+    /* Tuỳ chỉnh của người dùng (App Grid) */
+    --bg-color: #000000;
+    --bg-image: none;
+    --container-color: 255, 255, 255;
+    --container-opacity: 0.15;
+    --text-color: #ffffff;
+    --shadow-value: 0px 10px 20px 0px rgba(0,0,0,0.5);
+    
+    --icon-size: 60px;
+    --icon-radius: 14px;
+    --container-radius: 35px;
+    --text-size: 11px;
+    --text-spacing: 0px;
+    --show-name: block;
+
+    /* Cố định Giao diện hệ thống (Settings/Info Modals) */
+    --ui-panel-bg: rgba(30, 30, 30, 0.85);
+    --ui-text-color: #ffffff;
+    --ui-input-bg: rgba(120, 120, 128, 0.3);
+    --ui-pill-bg: rgba(120, 120, 128, 0.2);
+}
+
+/* Tự động kích hoạt Light Mode chuẩn Apple */
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg-color: #f2f2f7;
+        --container-color: 255, 255, 255;
+        --container-opacity: 0.6;
+        --text-color: #000000;
+        --shadow-value: 0px 10px 20px 0px rgba(0,0,0,0.1);
+
+        --ui-panel-bg: rgba(255, 255, 255, 0.85);
+        --ui-text-color: #000000;
+        --ui-input-bg: rgba(120, 120, 128, 0.1);
+        --ui-pill-bg: rgba(120, 120, 128, 0.15);
+    }
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    background-color: var(--bg-color);
+    /* Chặn triệt để hiệu ứng kéo giãn (overscroll) sinh ra viền xanh */
+    overflow: hidden; 
+    overscroll-behavior: none; 
+    touch-action: none;
+    transition: background-color 0.3s ease;
+}
+
+* { box-sizing: inherit; }
+
+#app-background {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: var(--bg-color);
+    background-image: var(--bg-image); 
+    background-size: cover; background-position: center;
+    z-index: -1; transition: 0.3s ease;
+}
+
+.glass-container {
+    background: rgba(var(--container-color), var(--container-opacity));
+    backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--container-radius);
+    box-shadow: var(--shadow-value);
+    display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: auto;
+    align-content: start;
+    gap: 15px 10px; width: 90vw; max-width: 430px; height: 85vh; max-height: 932px;
+    margin: 5vh auto 0; padding: 30px 20px; transition: 0.3s;
+    overflow-y: auto;
+    /* Chỉ cho phép cuộn bên trong khung app */
+    touch-action: pan-y;
+}
+.glass-container::-webkit-scrollbar { display: none; }
+
+.app-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    background: transparent; border: none; cursor: pointer; position: relative;
+}
+.app-item img {
+    width: var(--icon-size); height: var(--icon-size); border-radius: var(--icon-radius);
+    box-shadow: var(--shadow-value); transition: 0.2s; object-fit: cover;
+}
+.app-item span {
+    margin-top: 5px; font-size: var(--text-size); font-weight: 500;
+    color: var(--text-color); text-align: center; letter-spacing: var(--text-spacing);
+    white-space: nowrap; overflow: hidden; 
+    text-overflow: ellipsis; width: 100%; display: var(--show-name);
+}
+
+/* Nút Thêm App (+) */
+.add-app-btn { background: transparent; }
+.add-icon-box {
+    width: var(--icon-size); height: var(--icon-size);
+    background-color: #fef8cc; border-radius: 16px; 
+    display: flex; justify-content: center; align-items: center;
+    box-shadow: var(--shadow-value); transition: 0.2s;
+}
+.add-app-btn:active .add-icon-box { transform: scale(0.9); }
+
+/* Hiệu ứng Chế độ Xoá (Rung hệt iOS) */
+@keyframes jiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
+.edit-mode .app-item:not(.add-app-btn) { animation: jiggle 0.3s infinite; }
+.edit-mode .app-item:not(.add-app-btn)::after {
+    content: '−'; position: absolute; top: -5px; right: -5px; width: 24px; height: 24px;
+    background: #ff3b30; color: white; border-radius: 50%; font-weight: bold; font-size: 16px; display: flex;
+    justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 2; border: 1.5px solid white;
+}
+
+#btn-done-edit {
+    position: fixed; top: 5vh; right: 5vw; 
+    background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    color: #007aff; border: none; padding: 6px 16px; border-radius: 18px; 
+    font-size: 16px; font-weight: bold; cursor: pointer; z-index: 101; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.4);
+}
+#btn-done-edit.hidden { display: none; }
+
+/* Nút Setting chuẩn 40x40 */
+#btn-setting { 
+    position: fixed; bottom: 20px; right: 20px; width: 40px; height: 40px; 
+    border-radius: 50%; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    z-index: 100; cursor: pointer; transition: 0.3s; padding: 8px;
+}
+#btn-setting.hidden { opacity: 0; pointer-events: none; }
+#btn-setting img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Modal & UI Settings */
+.modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1000; display: flex; justify-content: center; align-items: flex-end; transition: opacity 0.3s; }
+.modal.hidden { opacity: 0; pointer-events: none; }
+
+.glass-panel { 
+    background: var(--ui-panel-bg); color: var(--ui-text-color);
+    backdrop-filter: blur(35px); -webkit-backdrop-filter: blur(35px); 
+    width: 100%; max-height: 85vh; overflow-y: auto; 
+    border-top-left-radius: 30px; border-top-right-radius: 30px; 
+    padding: 25px 20px; transition: transform 0.3s, opacity 0.3s; 
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+}
+.modal.hidden .glass-panel { transform: translateY(100%); }
+.glass-panel.transparent { opacity: 0.1 !important; pointer-events: none; } 
+
+/* Giao diện Header chuẩn macOS */
+.mac-header { 
+    position: relative; display: flex; justify-content: center; align-items: center; 
+    margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(120, 120, 128, 0.2); 
+}
+.mac-buttons { position: absolute; left: 0; display: flex; gap: 8px; }
+.mac-btn { width: 14px; height: 14px; border-radius: 50%; cursor: pointer; }
+.close-btn { background-color: #ff3b30; box-shadow: inset 0 0 4px rgba(0,0,0,0.2); }
+.min-btn { background-color: #ffcc00; box-shadow: inset 0 0 4px rgba(0,0,0,0.2); }
+.max-btn { background-color: #28cd41; box-shadow: inset 0 0 4px rgba(0,0,0,0.2); }
+.title-center { margin: 0; font-size: 18px; font-weight: 600; color: var(--ui-text-color); letter-spacing: 0.5px; }
+.header-actions { position: absolute; right: 0; display: flex; align-items: center; }
+
+.btn-icon { background: none; border: none; cursor: pointer; }
+.icon-info { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #007aff; color: #007aff; display: flex; justify-content: center; align-items: center; font-weight: bold; font-family: serif; font-size: 14px; }
+
+/* Các cấu hình cơ bản (Tệp ảnh) */
+.base-setting {
+    background: var(--ui-pill-bg);
+    border-radius: 20px; padding: 18px; margin-bottom: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* 🌟 GIAO DIỆN PILL BUTTON (Viên Thuốc Kính Mờ) 🌟 */
+.pill-style { margin-bottom: 15px; }
+.pill-style summary {
+    background: var(--ui-pill-bg);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-radius: 25px; padding: 14px 22px;
+    font-weight: 600; font-size: 15px; color: var(--ui-text-color);
+    cursor: pointer; list-style: none; /* Ẩn mũi tên mặc định */
+    display: flex; justify-content: center; align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.05); transition: 0.2s ease;
+}
+.pill-style summary::-webkit-details-marker { display: none; }
+.pill-style[open] summary {
+    background: rgba(0, 122, 255, 0.15); /* Màu xanh nhạt khi mở */
+    color: #007aff; border-color: rgba(0, 122, 255, 0.3);
+}
+
+/* Khung nội dung xổ ra dưới Pill Button */
+.pill-content {
+    background: rgba(120, 120, 128, 0.05); border-radius: 20px;
+    padding: 18px; margin-top: 10px; border: 1px solid rgba(120, 120, 128, 0.1);
+}
+
+.setting-group { margin-top: 5px; color: var(--ui-text-color); font-size: 14px; font-weight: 500; }
+.setting-group.stacked { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.setting-group input[type="text"], .setting-group select { width: 100%; padding: 12px; border-radius: 12px; border: none; background: var(--ui-input-bg); color: var(--ui-text-color); outline: none; font-size: 14px; }
+
+/* Làm gọn nút chọn Tệp, ẩn mã base64 mặc định của file input */
+input[type="file"] { color: transparent; width: 100%; padding: 10px; border-radius: 12px; background: var(--ui-input-bg); }
+input[type="file"]::file-selector-button { background: #007aff; color: white; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 600; margin-right: 12px; cursor: pointer; }
+
+/* Thanh kéo Slider */
+input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; }
+input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: rgba(120,120,128,0.3); border-radius: 3px; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; margin-top: -10px; background-image: url('image/slider_thumb.png'); background-size: cover; background-color: #fff; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.4); cursor: pointer; }
+
+/* Bảng chọn màu Color Picker */
+.apple-color-picker { -webkit-appearance: none; border: none; width: 34px; height: 34px; border-radius: 50%; padding: 0; background: none; cursor: pointer; }
+.apple-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+.apple-color-picker::-webkit-color-swatch { border: 2px solid rgba(120,120,128,0.4); border-radius: 50%; }
+
+/* Khác */
+.store-search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+.store-search-bar select { width: 85px; border-radius: 12px; }
+.list-menu { display: flex; flex-direction: column; gap: 10px; }
+.menu-item { background: var(--ui-input-bg); padding: 15px; border-radius: 16px; color: var(--ui-text-color); text-decoration: none; font-size: 16px; font-weight: 500; border: none; text-align: left; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
+.menu-item:active { transform: scale(0.97); }
+.menu-item img { width: 44px; height: 44px; border-radius: 10px; }
+
+.popup-panel { background: var(--ui-panel-bg); color: var(--ui-text-color); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); width: 85%; border-radius: 25px; padding: 25px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+.full-input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--ui-input-bg); background: var(--ui-input-bg); color: var(--ui-text-color); margin-bottom: 20px; font-size: 16px; outline: none; }
+.btn-full { width: 100%; padding: 14px; margin-top: 5px; border: none; border-radius: 14px; background: #007aff; color: #fff; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.2s; }
+.btn-full:active { transform: scale(0.96); }
+.btn-full.alt { background: var(--ui-input-bg); color: var(--ui-text-color); margin-top: 10px; }
+.version-text { text-align: center; opacity: 0.4; font-size: 13px; font-weight: 500; margin-top: 25px; color: var(--ui-text-color); }
