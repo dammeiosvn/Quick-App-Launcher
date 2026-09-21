@@ -124,7 +124,6 @@ function handleAppClick(app) {
         if(confirm(`Bạn muốn xoá ${app.name}?\nNhấn OK để Xoá, Cancel để Đổi Tên.`)) {
             appList = appList.filter(a => a.id !== app.id);
             saveApps();
-            // Lập tức gọi lại render để chèn nút + vào đúng vị trí trống
             renderApps();
         } else {
             currentEditId = app.id;
@@ -211,7 +210,7 @@ document.getElementById('btn-search-app').onclick = async () => {
     
     const resultsContainer = document.getElementById('store-results');
     document.getElementById('store-status-text').textContent = "Kết quả từ iTunes API (Online):";
-    resultsContainer.innerHTML = '<p style="padding: 10px;">Đang tìm kiếm...</p>';
+    resultsContainer.innerHTML = '<p style="padding: 10px; text-align: center;">Đang tìm kiếm...</p>';
     
     try {
         const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&country=${region}&entity=software&limit=15`);
@@ -219,7 +218,7 @@ document.getElementById('btn-search-app').onclick = async () => {
         resultsContainer.innerHTML = '';
         
         if(data.results.length === 0) {
-            resultsContainer.innerHTML = '<p style="padding: 10px;">Không tìm thấy ứng dụng nào.</p>';
+            resultsContainer.innerHTML = '<p style="padding: 10px; text-align: center;">Không tìm thấy ứng dụng nào.</p>';
             return;
         }
 
@@ -231,7 +230,7 @@ document.getElementById('btn-search-app').onclick = async () => {
             resultsContainer.appendChild(div);
         });
     } catch (e) { 
-        resultsContainer.innerHTML = '<p style="padding: 10px;">Lỗi kết nối API iTunes.</p>'; 
+        resultsContainer.innerHTML = '<p style="padding: 10px; text-align: center;">Lỗi kết nối API iTunes.</p>'; 
     }
 };
 
@@ -244,14 +243,16 @@ function toggleModal(id, show) {
 
 // Bắt sự kiện tắt bật Modal
 document.getElementById('btn-setting').onclick = () => toggleModal('setting-modal', true);
-document.getElementById('btn-close-store').onclick = () => toggleModal('store-modal', false);
+
+// Nút đỏ macOS đóng kho ứng dụng
+document.getElementById('mac-close-store').onclick = () => toggleModal('store-modal', false);
 
 document.getElementById('btn-info').onclick = () => { 
     toggleModal('setting-modal', false); 
     toggleModal('info-modal', true); 
 };
 
-// 🌟 XỬ LÝ NÚT ĐỎ macOS ĐÓNG INFO 🌟
+// Nút đỏ macOS đóng Info
 document.getElementById('mac-close-info').onclick = () => toggleModal('info-modal', false);
 
 document.getElementById('btn-about').onclick = () => { 
