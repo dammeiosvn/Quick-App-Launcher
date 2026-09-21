@@ -61,8 +61,24 @@ body { background-color: var(--bg-color); overflow: hidden; touch-action: manipu
     text-overflow: ellipsis; width: 100%; display: var(--show-name);
 }
 
-/* Nút Thêm App (+) */
-.add-app-btn img { background: rgba(120,120,128,0.3); padding: 15px; }
+/* Thiết kế lại Nút Thêm App (+) */
+.add-app-btn {
+    background: transparent;
+}
+.add-icon-box {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    background-color: #fef8cc; /* Vàng nhạt */
+    border-radius: 16px;       /* Bo góc chuẩn 16px */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: var(--shadow-value);
+    transition: 0.2s;
+}
+.add-app-btn:active .add-icon-box {
+    transform: scale(0.9);
+}
 
 /* Hiệu ứng chế độ Xoá (Rung) */
 @keyframes jiggle { 0% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
@@ -72,14 +88,14 @@ body { background-color: var(--bg-color); overflow: hidden; touch-action: manipu
     background: red; color: white; border-radius: 50%; font-weight: bold; display: flex;
     justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
-.edit-mode .add-app-btn::after { display: none; }
+.edit-mode .add-app-btn::after, .edit-mode .add-app-btn { animation: none; pointer-events: none; opacity: 0.5; }
 
-#btn-setting { position: fixed; bottom: 20px; right: 20px; width: 40px; height: 40px; border-radius: 50%; background: transparent; border: none; z-index: 100; }
+#btn-setting { position: fixed; bottom: 20px; right: 20px; width: 40px; height: 40px; border-radius: 50%; background: transparent; border: none; z-index: 100; cursor: pointer; }
 #btn-setting img { width: 100%; height: 100%; object-fit: contain; }
 
 /* Edit / Trash Bar */
 #edit-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80%; border-radius: 20px; padding: 15px; display: flex; justify-content: space-between; align-items: center; z-index: 101; flex-direction: row; }
-#trash-icon { width: 30px; height: 30px; }
+#trash-icon { width: 30px; height: 30px; object-fit: contain; }
 
 .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1000; display: flex; justify-content: center; align-items: flex-end; transition: opacity 0.3s; }
 .modal.hidden { opacity: 0; pointer-events: none; }
@@ -89,19 +105,19 @@ body { background-color: var(--bg-color); overflow: hidden; touch-action: manipu
 .glass-panel.transparent { opacity: 0.1 !important; pointer-events: none; } /* Mờ đi khi kéo slider */
 
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; color: var(--text-color); }
-.btn-close { background: rgba(120,120,128,0.2); border: none; width: 30px; height: 30px; border-radius: 50%; color: var(--text-color); font-size: 18px; font-weight: bold; }
+.btn-close { background: rgba(120,120,128,0.2); border: none; width: 30px; height: 30px; border-radius: 50%; color: var(--text-color); font-size: 18px; font-weight: bold; cursor: pointer; }
 .btn-icon { background: none; border: none; cursor: pointer; font-size: 20px; margin-left: 10px; }
 .icon-info { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #007aff; color: #007aff; display: flex; justify-content: center; align-items: center; font-weight: bold; font-family: serif; }
 
 .setting-category { margin-bottom: 15px; background: rgba(120,120,128,0.1); border-radius: 12px; padding: 10px; }
-.setting-category summary { font-weight: bold; outline: none; padding: 5px; color: var(--text-color); }
+.setting-category summary { font-weight: bold; outline: none; padding: 5px; color: var(--text-color); cursor: pointer; }
 .setting-group { margin-top: 15px; color: var(--text-color); }
 .setting-group.stacked { display: flex; flex-direction: column; gap: 8px; }
 .setting-group input[type="text"], .setting-group select { width: 100%; padding: 10px; border-radius: 10px; border: none; background: rgba(120,120,128,0.2); color: var(--text-color); outline: none; }
 
 input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; }
 input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: rgba(120,120,128,0.3); border-radius: 3px; }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; margin-top: -9px; background-image: url('image/slider_thumb.png'); background-size: cover; background-color: #fff; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; margin-top: -9px; background-image: url('image/slider_thumb.png'); background-size: cover; background-color: #fff; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); cursor: pointer; }
 
 .apple-color-picker { -webkit-appearance: none; border: none; width: 30px; height: 30px; border-radius: 50%; padding: 0; background: none; cursor: pointer; }
 .apple-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
@@ -111,11 +127,11 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24p
 .store-search-bar select { width: 80px; }
 
 .list-menu { display: flex; flex-direction: column; gap: 10px; }
-.menu-item { background: rgba(120,120,128,0.15); padding: 15px; border-radius: 12px; color: var(--text-color); text-decoration: none; font-size: 16px; border: none; text-align: left; display: flex; align-items: center; gap: 15px; }
+.menu-item { background: rgba(120,120,128,0.15); padding: 15px; border-radius: 12px; color: var(--text-color); text-decoration: none; font-size: 16px; border: none; text-align: left; display: flex; align-items: center; gap: 15px; cursor: pointer; }
 .menu-item img { width: 40px; height: 40px; border-radius: 8px; }
 
 .popup-panel { background: var(--bg-color); width: 80%; border-radius: 20px; padding: 20px; text-align: center; color: var(--text-color); }
 .full-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; margin-bottom: 15px; font-size: 16px; }
-.btn-full { width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 12px; background: #007aff; color: #fff; font-weight: bold; font-size: 16px; }
+.btn-full { width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 12px; background: #007aff; color: #fff; font-weight: bold; font-size: 16px; cursor: pointer; }
 .btn-full.alt { background: rgba(120,120,128,0.3); color: var(--text-color); }
 .version-text { text-align: center; opacity: 0.5; font-size: 12px; margin-top: 20px; color: var(--text-color); }
