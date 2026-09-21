@@ -90,7 +90,7 @@ html, body {
     color: var(--text-color); text-align: center; letter-spacing: var(--text-spacing);
     white-space: nowrap; overflow: hidden; 
     text-overflow: ellipsis; width: 100%; display: var(--show-name);
-    /* Bỏ đổ bóng chữ (text-shadow) theo yêu cầu */
+    /* Đã xoá text-shadow (bóng tiêu đề) theo yêu cầu của sếp */
 }
 
 /* Thiết kế Nút Thêm App (+) */
