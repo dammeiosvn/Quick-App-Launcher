@@ -19,11 +19,12 @@ const shadowTemplates = [
 ];
 
 const root = document.documentElement;
-
-// Hàm check hệ thống đang dùng Dark hay Light Mode
 const isLight = window.matchMedia('(prefers-color-scheme: light)').matches;
 
-// Đổi mã Hex sang RGB để làm Opacity
+// Biến lưu trữ ảnh Base64 ẩn, tránh làm nặng giao diện Input
+let localBase64Image = "";
+
+// Hàm chuyển mã Hex sang RGB để tích hợp mờ khung nền
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
@@ -31,8 +32,17 @@ function hexToRgb(hex) {
 
 // Cập nhật giao diện theo cài đặt
 function updateTheme() {
-    const bgUrl = document.getElementById('input-bg-image').value;
-    root.style.setProperty('--bg-image', bgUrl ? `url(${bgUrl})` : 'none');
+    const bgInput = document.getElementById('input-bg-image').value;
+    let finalBgUrl = bgInput;
+
+    // Nếu input hiển thị text báo ảnh local thì dùng chuỗi Base64 đã lưu ẩn
+    if (bgInput === "[Ảnh từ thiết bị]") {
+        finalBgUrl = localBase64Image;
+    } else {
+        localBase64Image = ""; // Nếu sếp gõ link mới, xoá ngay biến Base64 ẩn đi
+    }
+
+    root.style.setProperty('--bg-image', finalBgUrl ? `url(${finalBgUrl})` : 'none');
     
     root.style.setProperty('--bg-color', document.getElementById('color-bg').value);
     root.style.setProperty('--container-color', hexToRgb(document.getElementById('color-container').value));
@@ -64,7 +74,8 @@ function updateTheme() {
 // Lưu dữ liệu vào LocalStorage
 function saveSettings() {
     const config = {
-        bgUrl: document.getElementById('input-bg-image').value,
+        bgInputVal: document.getElementById('input-bg-image').value,
+        localBase64: localBase64Image, // Lưu ngầm chuỗi ảnh
         bgColor: document.getElementById('color-bg').value,
         containerColor: document.getElementById('color-container').value,
         containerOpacity: document.getElementById('slider-opacity').value,
@@ -96,11 +107,12 @@ function loadSettings() {
 
     const saved = JSON.parse(localStorage.getItem('qal_theme')) || {};
     
-    document.getElementById('input-bg-image').value = saved.bgUrl || '';
+    document.getElementById('input-bg-image').value = saved.bgInputVal || '';
+    localBase64Image = saved.localBase64 || '';
     
     // Mặc định màu chuẩn Apple nếu chưa tuỳ chỉnh
     document.getElementById('color-bg').value = saved.bgColor || (isLight ? '#f2f2f7' : '#000000');
-    document.getElementById('color-container').value = saved.containerColor || '#ffffff';
+    document.getElementById('color-container').value = saved.containerColor || (isLight ? '#ffffff' : '#ffffff');
     document.getElementById('slider-opacity').value = saved.containerOpacity || (isLight ? 60 : 15);
     document.getElementById('slider-radius-container').value = saved.containerRadius || 35;
     
@@ -124,13 +136,14 @@ function loadSettings() {
     updateTheme();
 }
 
-// Chọn ảnh từ thiết bị
+// Bắt sự kiện chọn ảnh từ thiết bị
 document.getElementById('input-bg-file').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            document.getElementById('input-bg-image').value = e.target.result;
+            localBase64Image = e.target.result; // Lưu ngầm chuỗi
+            document.getElementById('input-bg-image').value = "[Ảnh từ thiết bị]"; // Hiện gọn gàng
             updateTheme();
         };
         reader.readAsDataURL(file);
