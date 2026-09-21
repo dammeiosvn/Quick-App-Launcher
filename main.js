@@ -1,66 +1,54 @@
 let appList = [];
+let offlineApps = []; // Chứa danh sách app lấy từ System/appios.json
 let isEditMode = false;
 let currentEditId = null;
+let currentTranslations = {};
 
 // --- ĐA NGÔN NGỮ (TỰ ĐỘNG PHÁT HIỆN & FALLBACK) ---
 async function loadTranslations() {
-    // Lấy mã ngôn ngữ của hệ thống (VD: vi-VN, en-US)
     const userLang = navigator.language || navigator.userLanguage;
-    
     try {
-        // Thử tải file ngôn ngữ theo hệ thống từ thư mục Language/
         const res = await fetch(`Language/${userLang}.json`);
-        if (!res.ok) throw new Error("Language file not found");
-        applyTranslations(await res.json());
+        if (!res.ok) throw new Error("Không tìm thấy file ngôn ngữ");
+        currentTranslations = await res.json();
     } catch (e) {
-        console.warn(`Không tìm thấy Language/${userLang}.json, tự động Fallback về en-GB`);
+        console.warn(`Fallback về en-GB do không có file Language/${userLang}.json`);
         try {
-            // Fallback về en-GB.json nếu không tìm thấy
             const fallbackRes = await fetch(`Language/en-GB.json`);
-            if (fallbackRes.ok) {
-                applyTranslations(await fallbackRes.json());
-            }
-        } catch (err) {
-            console.error("Lỗi: Không tìm thấy cả file fallback en-GB.json", err);
-        }
+            if (fallbackRes.ok) currentTranslations = await fallbackRes.json();
+        } catch (err) { console.error("Lỗi Fallback", err); }
     }
+    applyTranslations(document);
 }
 
-function applyTranslations(translations) {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
+function applyTranslations(rootElement) {
+    rootElement.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (translations[key]) {
-            el.textContent = translations[key];
-        }
+        if (currentTranslations[key]) el.textContent = currentTranslations[key];
     });
 }
 
-// --- INIT LƯU TRỮ APP ---
+// --- INIT LƯU TRỮ APP (OFFLINE & ONLINE) ---
 async function loadAppsData() {
-    const local = localStorage.getItem('qal_apps');
-    if (local && local !== "[]") {
-        appList = JSON.parse(local);
-        renderApps();
-    } else {
-        // Tải từ JSON mặc định nếu có
-        try {
-            const res = await fetch('System/appios.json');
-            if(res.ok) {
-                const data = await res.json();
-                appList = Object.keys(data).map(key => ({
-                    id: key, name: data[key].Name, icon: data[key].icon
-                }));
-                saveApps(); 
-            }
-        } catch (e) { 
-            console.warn("Khởi chạy lần đầu: Kho trống"); 
+    // 1. Tải danh sách App Offline từ thư mục System để đưa vào Kho
+    try {
+        const res = await fetch('System/appios.json');
+        if (res.ok) {
+            const data = await res.json();
+            offlineApps = Object.keys(data).map(key => ({
+                id: key, name: data[key].Name, icon: data[key].icon
+            }));
         }
-        renderApps(); // Chạy render để hiển thị nút + nếu mảng rỗng
-    }
-}
+    } catch (e) { console.warn("Không tìm thấy System/appios.json"); }
 
-function saveApps() { 
-    localStorage.setItem('qal_apps', JSON.stringify(appList)); 
+    // 2. Tải danh sách App sếp đã thêm vào màn hình chính
+    const local = localStorage.getItem('qal_apps');
+    if (local) {
+        appList = JSON.parse(local); // Nếu đã từng thêm app thì load lại
+    } else {
+        appList = []; // Lần chạy đầu tiên: mảng rỗng (Chỉ hiện dấu +)
+    }
+    renderApps();
 }
 
 // --- RENDER GIAO DIỆN KHUNG APP & NÚT THÊM (+) ---
@@ -73,19 +61,17 @@ function renderApps() {
         btn.className = 'app-item';
         
         const icon = document.createElement('img');
-        
-        // Xử lý đường dẫn Icon offline & online
+        // Logic đọc icon offline/online
         if (app.icon.startsWith('http')) {
             icon.src = app.icon;
         } else {
-            // Lấy tên file gốc (bỏ qua các thư mục như systemapp/ cũ)
             const fileName = app.icon.split('/').pop();
             icon.src = `icon/${fileName}`;
         }
         
-        // Fallback: nếu sai tên ảnh trong json, thử gọi tên App
+        // Fallback icon
         icon.onerror = function() { 
-            this.onerror = () => { this.src = 'image/placeholder.png'; }; // Nếu vẫn lỗi thì hiện placeholder
+            this.onerror = () => { this.src = 'image/placeholder.png'; }; 
             this.src = `icon/${app.name}.png`; 
         };
         
@@ -108,14 +94,13 @@ function renderApps() {
         addIconBox.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
         
         const addTitle = document.createElement('span');
-        addTitle.setAttribute('data-i18n', 'add_app');
-        addTitle.textContent = "Thêm"; // Sẽ bị ghi đè bởi i18n nếu có
+        addTitle.textContent = currentTranslations['add_app'] || "Thêm";
 
         addBtn.appendChild(addIconBox);
         addBtn.appendChild(addTitle);
         
         addBtn.onclick = () => {
-            if(!isEditMode) toggleModal('store-modal', true);
+            if(!isEditMode) openStore();
         };
         grid.appendChild(addBtn);
     }
@@ -126,14 +111,14 @@ function renderApps() {
 // --- LOGIC CLICK APP (CHẠY / XOÁ / SỬA TÊN) ---
 function handleAppClick(app) {
     if (!isEditMode) {
-        // Mở app qua shortcut
+        // Chạy qua phím tắt
         const shortcutUrl = `shortcuts://run-shortcut?name=Open%20App%20Launcher&input=text&text=${encodeURIComponent(app.id)}`;
         window.location.href = shortcutUrl;
     } else {
-        // Chế độ Edit
+        // Chế độ Edit: Hỏi Xoá hay Đổi Tên
         if(confirm(`Bạn muốn xoá ${app.name}?\nNhấn OK để Xoá, Cancel để Đổi Tên.`)) {
             appList = appList.filter(a => a.id !== app.id);
-            saveApps(); 
+            localStorage.setItem('qal_apps', JSON.stringify(appList));
             renderApps();
         } else {
             currentEditId = app.id;
@@ -143,93 +128,123 @@ function handleAppClick(app) {
     }
 }
 
-// --- TÌM KIẾM iTUNES API ---
+// --- CHẾ ĐỘ SỬA TRANG (RUNG ICON & HIỆN NÚT XONG) ---
+document.getElementById('btn-enter-edit-mode').onclick = () => {
+    isEditMode = true; 
+    toggleModal('setting-modal', false);
+    document.getElementById('btn-done-edit').classList.remove('hidden');
+    document.getElementById('btn-setting').classList.add('hidden');
+    renderApps();
+};
+
+document.getElementById('btn-done-edit').onclick = () => {
+    isEditMode = false; 
+    document.getElementById('btn-done-edit').classList.add('hidden');
+    document.getElementById('btn-setting').classList.remove('hidden');
+    renderApps();
+};
+
+// --- ĐỔI TÊN APP ---
+document.getElementById('btn-save-rename').onclick = () => {
+    const newName = document.getElementById('input-rename').value;
+    if (currentEditId && newName) {
+        appList = appList.map(a => a.id === currentEditId ? {...a, name: newName} : a);
+        localStorage.setItem('qal_apps', JSON.stringify(appList));
+        renderApps();
+    }
+    toggleModal('rename-modal', false);
+};
+document.getElementById('btn-close-rename').onclick = () => toggleModal('rename-modal', false);
+
+// --- KHO ỨNG DỤNG (OFFLINE & ONLINE) ---
+function openStore() {
+    toggleModal('store-modal', true);
+    renderOfflineStore();
+}
+
+function renderOfflineStore() {
+    const resultsContainer = document.getElementById('store-results');
+    document.getElementById('store-status-text').textContent = "Ứng dụng có sẵn (Offline):";
+    resultsContainer.innerHTML = '';
+    
+    offlineApps.forEach(app => {
+        const div = document.createElement('button');
+        div.className = 'menu-item';
+        
+        let iconSrc = app.icon;
+        if (!iconSrc.startsWith('http')) {
+            const fileName = iconSrc.split('/').pop();
+            iconSrc = `icon/${fileName}`;
+        }
+
+        div.innerHTML = `<img src="${iconSrc}" onerror="this.src='icon/${app.name}.png'"> <span>${app.name}</span>`;
+        div.onclick = () => addAppToGrid(app);
+        resultsContainer.appendChild(div);
+    });
+}
+
+function addAppToGrid(app) {
+    if (appList.length >= 24) return alert("Đã đầy 24 ứng dụng!");
+    if (appList.find(a => a.id === app.id)) return alert("App đã tồn tại!");
+    
+    appList.push(app);
+    localStorage.setItem('qal_apps', JSON.stringify(appList));
+    renderApps();
+    toggleModal('store-modal', false);
+}
+
 document.getElementById('btn-search-app').onclick = async () => {
-    const query = document.getElementById('input-search-app').value;
+    const query = document.getElementById('input-search-app').value.trim();
     const region = document.getElementById('select-store-region').value;
-    if(!query) return;
+    
+    // Nếu khung tìm kiếm trống, quay lại list Offline
+    if(!query) {
+        renderOfflineStore();
+        return;
+    }
     
     const resultsContainer = document.getElementById('store-results');
-    resultsContainer.innerHTML = '<p>Đang tìm...</p>';
+    document.getElementById('store-status-text').textContent = "Kết quả từ iTunes API (Online):";
+    resultsContainer.innerHTML = '<p>Đang tìm kiếm...</p>';
     
     try {
         const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&country=${region}&entity=software&limit=15`);
         const data = await res.json();
         resultsContainer.innerHTML = '';
         
+        if(data.results.length === 0) {
+            resultsContainer.innerHTML = '<p>Không tìm thấy ứng dụng nào.</p>';
+            return;
+        }
+
         data.results.forEach(app => {
             const div = document.createElement('button');
             div.className = 'menu-item';
             div.innerHTML = `<img src="${app.artworkUrl100}"> <span>${app.trackName}</span>`;
-            div.onclick = () => {
-                if (appList.length >= 24) return alert("Đã đầy 24 ứng dụng!");
-                if (appList.find(a => a.id === app.bundleId)) return alert("App đã tồn tại!");
-                
-                appList.push({ id: app.bundleId, name: app.trackName, icon: app.artworkUrl100 });
-                saveApps(); 
-                renderApps();
-                toggleModal('store-modal', false);
-            };
+            div.onclick = () => addAppToGrid({ id: app.bundleId, name: app.trackName, icon: app.artworkUrl100 });
             resultsContainer.appendChild(div);
         });
     } catch (e) { 
-        resultsContainer.innerHTML = '<p>Lỗi kết nối API.</p>'; 
+        resultsContainer.innerHTML = '<p>Lỗi kết nối API iTunes.</p>'; 
     }
 };
 
-// --- CHẾ ĐỘ EDIT ---
-document.getElementById('btn-edit-mode').onclick = () => {
-    isEditMode = true; 
-    toggleModal('setting-modal', false);
-    document.getElementById('edit-bar').classList.remove('hidden');
-    renderApps();
-};
-
-document.getElementById('btn-exit-edit').onclick = () => {
-    isEditMode = false; 
-    document.getElementById('edit-bar').classList.add('hidden');
-    renderApps();
-};
-
-document.getElementById('btn-save-rename').onclick = () => {
-    const newName = document.getElementById('input-rename').value;
-    if (currentEditId && newName) {
-        appList = appList.map(a => a.id === currentEditId ? {...a, name: newName} : a);
-        saveApps(); 
-        renderApps();
-    }
-    toggleModal('rename-modal', false);
-};
-
-document.getElementById('btn-close-rename').onclick = () => toggleModal('rename-modal', false);
-
-// --- ĐIỀU KHIỂN MODAL ---
+// --- ĐIỀU KHIỂN MODAL CHUNG ---
 function toggleModal(id, show) {
     const modal = document.getElementById(id);
     if (show) modal.classList.remove('hidden'); 
     else modal.classList.add('hidden');
 }
 
-// Gắn sự kiện tắt bật Modal
 document.getElementById('btn-setting').onclick = () => toggleModal('setting-modal', true);
 document.getElementById('btn-close-setting').onclick = () => toggleModal('setting-modal', false);
 document.getElementById('btn-close-store').onclick = () => toggleModal('store-modal', false);
-document.getElementById('btn-info').onclick = () => { 
-    toggleModal('setting-modal', false); 
-    toggleModal('info-modal', true); 
-};
+document.getElementById('btn-info').onclick = () => { toggleModal('setting-modal', false); toggleModal('info-modal', true); };
 document.getElementById('btn-close-info').onclick = () => toggleModal('info-modal', false);
-document.getElementById('btn-about').onclick = () => { 
-    toggleModal('info-modal', false); 
-    toggleModal('about-popup', true); 
-};
+document.getElementById('btn-about').onclick = () => { toggleModal('info-modal', false); toggleModal('about-popup', true); };
 document.getElementById('btn-close-about').onclick = () => toggleModal('about-popup', false);
 
 // Init khi tải xong trang
 document.addEventListener('DOMContentLoaded', () => { 
-    // Dùng Promise.all để gọi cùng lúc
-    Promise.all([loadTranslations(), loadAppsData()]).then(() => {
-        // Cập nhật lại UI sau khi có ngôn ngữ phòng trường hợp nút thêm (+) đã render bằng tiếng Việt mặc định
-        applyTranslations(document.querySelectorAll('[data-i18n]')); 
-    });
+    Promise.all([loadTranslations(), loadAppsData()]);
 });
